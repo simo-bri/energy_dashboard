@@ -24,7 +24,7 @@ DATA_SOURCES = {
     },
     "World Bank – WDI (Energia & Ambiente)": {
         "type": "wdi",
-        "local_data": str(Path(__file__).parent / "worldbank_wdi_bulk" / "WDICSV.csv"),
+        "api_base": "https://api.worldbank.org/v2/country/all/indicator",
         "local_series": str(Path(__file__).parent / "worldbank_wdi_bulk" / "WDISeries.csv"),
     },
 }
@@ -130,25 +130,39 @@ def load_wdi(codes: tuple) -> pd.DataFrame:
         _CACHE[mem_key] = cached
         return cached
 
-    path = DATA_SOURCES["World Bank – WDI (Energia & Ambiente)"]["local_data"]
-    chunks = [c[c["Indicator Code"].isin(codes)]
-              for c in pd.read_csv(path, chunksize=5000, low_memory=False)]
-    chunks = [c for c in chunks if not c.empty]
-    if not chunks:
+    base = DATA_SOURCES["World Bank – WDI (Energia & Ambiente)"]["api_base"]
+    frames = []
+    for code in codes:
+        url = f"{base}/{code}?format=json&per_page=20000&date=1960:2026"
+        try:
+            r = requests.get(url, timeout=60)
+            r.raise_for_status()
+            meta, records = r.json()
+            # Gestisce eventuale paginazione
+            all_records = list(records)
+            for page in range(2, meta["pages"] + 1):
+                r2 = requests.get(url + f"&page={page}", timeout=60)
+                all_records.extend(r2.json()[1])
+            for rec in all_records:
+                if rec["value"] is not None:
+                    frames.append({
+                        "Country Name":   rec["country"]["value"],
+                        "Country Code":   rec["countryiso3code"],
+                        "Indicator Name": rec["indicator"]["value"],
+                        "Indicator Code": rec["indicator"]["id"],
+                        "year":           int(rec["date"]),
+                        "value":          float(rec["value"]),
+                    })
+        except Exception:
+            continue
+
+    if not frames:
         return pd.DataFrame()
 
-    df = pd.concat(chunks, ignore_index=True)
-    yr_cols = [c for c in df.columns if c.isdigit()]
-    df_long = df.melt(
-        id_vars=["Country Name", "Country Code", "Indicator Name", "Indicator Code"],
-        value_vars=yr_cols, var_name="year", value_name="value",
-    )
-    df_long["year"]  = df_long["year"].astype(int)
-    df_long["value"] = pd.to_numeric(df_long["value"], errors="coerce")
-    df_long = df_long.dropna(subset=["value"])
-    _CACHE[mem_key] = df_long
-    _disk_save(disk_key, df_long)
-    return df_long
+    df = pd.DataFrame(frames)
+    _CACHE[mem_key] = df
+    _disk_save(disk_key, df)
+    return df
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────────

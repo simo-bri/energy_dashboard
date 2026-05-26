@@ -1,10 +1,16 @@
+# Cache disco dell'app
 .dashboard_cache/
-worldbank_wdi_bulk/
+
+# File dati grandi (scaricati automaticamente)
+worldbank_wdi_bulk/WDICSV.csv
 wdi_cache/
 *.pkl
-*.csv
+
+# File Excel locali
 EI-Stats-Review-ALL-data.xlsx
 dati_energia_owid.xlsx
+
+# Python
 __pycache__/
 *.pyc
 .env
