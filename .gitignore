@@ -1,0 +1,12 @@
+.dashboard_cache/
+worldbank_wdi_bulk/
+wdi_cache/
+*.pkl
+*.csv
+EI-Stats-Review-ALL-data.xlsx
+dati_energia_owid.xlsx
+__pycache__/
+*.pyc
+.env
+venv/
+.DS_Store
