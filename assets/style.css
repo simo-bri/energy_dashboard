@@ -1,0 +1,488 @@
+/* ═══════════════════════════════════════════════════════════
+   Energy Dashboard — Custom UI
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Base & Font ──────────────────────────────────────────── */
+*, *::before, *::after {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+/* ── App Header ───────────────────────────────────────────── */
+.app-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #2563eb 100%);
+    padding: 1rem 1.75rem;
+    box-shadow: 0 2px 12px rgba(37, 99, 235, 0.3);
+    display: flex;
+    align-items: center;
+}
+
+.app-header h3 {
+    color: #f8fafc !important;
+    font-weight: 700 !important;
+    font-size: 1.2rem !important;
+    letter-spacing: -0.02em;
+    margin: 0 !important;
+    border: none !important;
+    padding: 0 !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.app-sidebar {
+    background-color: #0f172a !important;
+    border-right: none !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    min-height: calc(100vh - 58px);
+    padding: 1.25rem 1rem !important;
+    overflow-y: auto;
+}
+
+.app-sidebar h5 {
+    color: #f1f5f9 !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.65rem !important;
+}
+
+.app-sidebar label,
+.app-sidebar .small {
+    color: #94a3b8 !important;
+    font-size: 0.73rem !important;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.app-sidebar hr {
+    border-color: #1e293b !important;
+    margin: 1rem 0 !important;
+    opacity: 1 !important;
+}
+
+/* Sidebar: Select dropdowns */
+.app-sidebar .Select-control,
+.app-sidebar .Select--multi .Select-control {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px !important;
+    min-height: 34px !important;
+}
+
+.app-sidebar .Select-value-label,
+.app-sidebar .Select-placeholder {
+    color: #cbd5e1 !important;
+    font-size: 0.8rem !important;
+}
+
+.app-sidebar .Select-input input {
+    color: #e2e8f0 !important;
+}
+
+.app-sidebar .Select-arrow {
+    border-top-color: #64748b !important;
+}
+
+.app-sidebar .Select-menu-outer {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5) !important;
+    z-index: 9999 !important;
+}
+
+.app-sidebar .Select-option {
+    background: #1e293b !important;
+    color: #cbd5e1 !important;
+    font-size: 0.8rem !important;
+    padding: 8px 12px !important;
+}
+
+.app-sidebar .Select-option.is-focused {
+    background: #2563eb !important;
+    color: #fff !important;
+}
+
+.app-sidebar .Select-option.is-selected {
+    background: #1d4ed8 !important;
+    color: #fff !important;
+}
+
+/* Multi-value tags */
+.app-sidebar .Select-value {
+    background: rgba(37, 99, 235, 0.25) !important;
+    border: 1px solid rgba(37, 99, 235, 0.4) !important;
+    border-radius: 5px !important;
+    margin: 2px !important;
+}
+
+.app-sidebar .Select-value-label {
+    color: #93c5fd !important;
+    font-size: 0.75rem !important;
+}
+
+.app-sidebar .Select-value-icon {
+    border-right: 1px solid rgba(37, 99, 235, 0.4) !important;
+    color: #93c5fd !important;
+    padding: 2px 5px !important;
+}
+
+.app-sidebar .Select-value-icon:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+}
+
+/* Sidebar: Range Slider */
+.app-sidebar .rc-slider-track {
+    background-color: #2563eb !important;
+}
+
+.app-sidebar .rc-slider-rail {
+    background-color: #334155 !important;
+}
+
+.app-sidebar .rc-slider-handle {
+    border-color: #2563eb !important;
+    background-color: #2563eb !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important;
+    width: 14px !important;
+    height: 14px !important;
+    margin-top: -5px !important;
+}
+
+.app-sidebar .rc-slider-handle:hover,
+.app-sidebar .rc-slider-handle:active {
+    border-color: #60a5fa !important;
+    background: #60a5fa !important;
+    box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.2) !important;
+}
+
+.app-sidebar .rc-slider-tooltip-inner {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    font-size: 0.72rem !important;
+    border-radius: 5px !important;
+}
+
+/* Sidebar: RadioItems */
+.app-sidebar .form-check-input {
+    background-color: #1e293b !important;
+    border-color: #475569 !important;
+    width: 14px;
+    height: 14px;
+}
+
+.app-sidebar .form-check-input:checked {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+.app-sidebar .form-check-label {
+    color: #cbd5e1 !important;
+    font-size: 0.8rem !important;
+    cursor: pointer;
+}
+
+/* Sidebar: Alerts */
+.app-sidebar .alert {
+    border-radius: 8px !important;
+    font-size: 0.76rem !important;
+    border: none !important;
+    padding: 0.5rem 0.75rem !important;
+}
+
+.app-sidebar .alert-success {
+    background: rgba(5, 150, 105, 0.15) !important;
+    color: #6ee7b7 !important;
+}
+
+.app-sidebar .alert-warning {
+    background: rgba(217, 119, 6, 0.15) !important;
+    color: #fcd34d !important;
+}
+
+/* Upload in sidebar */
+.app-sidebar #ei-upload > div {
+    background: #1e293b !important;
+    border: 1.5px dashed #334155 !important;
+    border-radius: 8px !important;
+    color: #64748b !important;
+    font-size: 0.78rem !important;
+    transition: all 0.2s ease;
+    padding: 0.6rem !important;
+}
+
+.app-sidebar #ei-upload > div:hover {
+    border-color: #2563eb !important;
+    background: rgba(37, 99, 235, 0.08) !important;
+    color: #93c5fd !important;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn {
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+    padding: 0.45rem 1rem !important;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4) !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45) !important;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35) !important;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #475569, #334155) !important;
+    color: #f1f5f9 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #64748b, #475569) !important;
+    box-shadow: 0 5px 14px rgba(0,0,0,0.25) !important;
+    color: #fff !important;
+}
+
+/* ── Main Area ────────────────────────────────────────────── */
+.app-main {
+    background-color: #f1f5f9 !important;
+    padding: 1.5rem !important;
+    min-height: calc(100vh - 58px);
+}
+
+/* ── Summary Banner Cards ─────────────────────────────────── */
+#summary-banner .card {
+    border: none !important;
+    border-radius: 14px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06) !important;
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    background: white !important;
+}
+
+#summary-banner .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.11) !important;
+}
+
+#summary-banner .card-body {
+    padding: 1rem 1.25rem;
+}
+
+#summary-banner .card-subtitle {
+    font-size: 0.68rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700 !important;
+    color: #94a3b8 !important;
+    margin-bottom: 0.4rem !important;
+}
+
+#summary-banner .card-title {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    letter-spacing: -0.03em;
+}
+
+/* Accent top-border per ogni card (usa nth-child) */
+#summary-banner .col:nth-child(1) .card { border-top: 3px solid #2563eb !important; }
+#summary-banner .col:nth-child(2) .card { border-top: 3px solid #059669 !important; }
+#summary-banner .col:nth-child(3) .card { border-top: 3px solid #d97706 !important; }
+#summary-banner .col:nth-child(4) .card { border-top: 3px solid #7c3aed !important; }
+
+/* ── Tab Container ────────────────────────────────────────── */
+.tab-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 6px 20px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+/* Tab bar */
+.dash-tabs.tabs {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 0.6rem 0.75rem 0 !important;
+    display: flex;
+    gap: 4px;
+}
+
+/* Individual tabs */
+.dash-tab.tab {
+    border: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    padding: 0.55rem 1.1rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    background: transparent !important;
+    transition: color 0.18s, background 0.18s;
+    cursor: pointer;
+}
+
+.dash-tab.tab:hover {
+    color: #2563eb !important;
+    background: rgba(37, 99, 235, 0.07) !important;
+}
+
+.dash-tab--selected.tab--selected {
+    color: #2563eb !important;
+    background: white !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid transparent !important;
+    box-shadow: inset 0 -3px 0 #2563eb !important;
+}
+
+/* Tab content */
+.tab-content-area {
+    padding: 1.5rem;
+    min-height: 350px;
+    background: white;
+}
+
+/* ── Alerts ───────────────────────────────────────────────── */
+.alert {
+    border-radius: 10px !important;
+    border: none !important;
+    font-size: 0.82rem !important;
+}
+
+.alert-success  { background: rgba(5, 150, 105, 0.09)  !important; color: #065f46  !important; }
+.alert-info     { background: rgba(37, 99, 235, 0.08)  !important; color: #1e40af  !important; }
+.alert-warning  { background: rgba(217, 119, 6, 0.09)  !important; color: #92400e  !important; }
+.alert-danger   { background: rgba(220, 38, 38, 0.09)  !important; color: #991b1b  !important; }
+.alert-secondary{ background: rgba(71, 85, 105, 0.09)  !important; color: #334155  !important; }
+
+/* ── DataTable ────────────────────────────────────────────── */
+.dash-spreadsheet-container {
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    border: 1px solid #e2e8f0 !important;
+    font-size: 0.8rem !important;
+}
+
+.dash-header {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.07em !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    padding: 8px 10px !important;
+}
+
+.dash-cell {
+    font-size: 0.79rem !important;
+    color: #374151 !important;
+    border-color: #f1f5f9 !important;
+}
+
+.dash-cell-value:hover {
+    background-color: rgba(37, 99, 235, 0.04) !important;
+}
+
+/* DataTable pagination */
+.previous-page, .next-page, .last-page, .first-page {
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #2563eb !important;
+    background: white !important;
+    transition: all 0.15s;
+}
+
+.previous-page:hover, .next-page:hover {
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.app-sidebar::-webkit-scrollbar-track { background: #0f172a; }
+.app-sidebar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+.app-sidebar::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+/* ── Loading ──────────────────────────────────────────────── */
+#sidebar-spinner .spinner-border {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    border-width: 3px !important;
+    color: #3b82f6 !important;
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+}
+
+/* ── Plotly charts inside tab ─────────────────────────────── */
+.tab-content-area .js-plotly-plot .plotly .main-svg {
+    border-radius: 10px;
+}
+
+/* modebar (plotly toolbar) */
+.modebar {
+    background: transparent !important;
+}
+
+/* ── Micro-interazioni: pulse sul btn-load ────────────────── */
+@keyframes pulse-blue {
+    0%   { box-shadow: 0 2px 8px rgba(37,99,235,0.4); }
+    50%  { box-shadow: 0 2px 18px rgba(37,99,235,0.7); }
+    100% { box-shadow: 0 2px 8px rgba(37,99,235,0.4); }
+}
+
+#btn-load:not(:hover) {
+    animation: pulse-blue 2.5s ease-in-out infinite;
+}
+
+/* ── Micro-interazioni: fade-in dei grafici ───────────────── */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.js-plotly-plot {
+    animation: fadeInUp 0.35s ease-out both;
+}
+
+.dash-spreadsheet-container {
+    animation: fadeInUp 0.35s ease-out both;
+}
+/* TEST */
