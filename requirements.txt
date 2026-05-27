@@ -1,7 +1,6 @@
 dash==4.1.0
 dash-bootstrap-components==2.0.4
-pandas>=2.0
-plotly>=5.20
-requests>=2.31
-openpyxl>=3.1
-gunicorn>=21.0
+plotly==6.7.0
+pandas==3.0.2
+requests==2.33.1
+openpyxl==3.1.5

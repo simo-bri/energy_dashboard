@@ -1,18 +1,16 @@
-# Cache disco dell'app
+# Cache dati (si rigenera automaticamente)
 .dashboard_cache/
 
-# File dati grandi (scaricati automaticamente)
-worldbank_wdi_bulk/WDICSV.csv
-wdi_cache/
-*.pkl
-
-# File Excel locali
+# File grandi da scaricare a mano (istruzioni nel README)
 EI-Stats-Review-ALL-data.xlsx
-dati_energia_owid.xlsx
 
 # Python
 __pycache__/
 *.pyc
+*.pyo
 .env
 venv/
-.DS_Store
+.venv/
+
+# Cache WDI locale
+wdi_cache/
