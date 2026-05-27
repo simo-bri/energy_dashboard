@@ -1,9 +1,6 @@
 # Cache dati (si rigenera automaticamente)
 .dashboard_cache/
 
-# File grandi da scaricare a mano (istruzioni nel README)
-EI-Stats-Review-ALL-data.xlsx
-
 # Python
 __pycache__/
 *.pyc

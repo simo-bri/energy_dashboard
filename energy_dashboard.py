@@ -21,6 +21,7 @@ DATA_SOURCES = {
     "Energy Institute – Stats Review": {
         "type": "ei",
         "url": "https://www.energyinst.org/__data/assets/excel_doc/0008/1656215/EI-Stats-Review-ALL-data.xlsx",
+        "local_file": str(Path(__file__).parent / "EI-Stats-Review-ALL-data.xlsx"),
     },
     "World Bank – WDI (Energia & Ambiente)": {
         "type": "wdi",
@@ -351,15 +352,13 @@ try:
 except Exception:
     _WDI_OPTS = []
 
-# Percorso file EI locale (se presente nella cartella dell'app viene caricato in automatico)
-_EI_LOCAL = Path(__file__).parent / "EI-Stats-Review-ALL-data.xlsx"
-
 def _ei_local_bytes() -> bytes | None:
     """Restituisce i bytes del file EI locale se esiste ed è un vero xlsx."""
-    if not _EI_LOCAL.exists():
+    local_path = Path(DATA_SOURCES["Energy Institute – Stats Review"]["local_file"])
+    if not local_path.exists():
         return None
     try:
-        raw = _EI_LOCAL.read_bytes()
+        raw = local_path.read_bytes()
         pd.ExcelFile(io.BytesIO(raw), engine="openpyxl")  # verifica che sia un xlsx valido
         return raw
     except Exception:
