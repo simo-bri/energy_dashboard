@@ -359,12 +359,13 @@ def _ei_local_bytes() -> bytes | None:
         return None
     try:
         raw = local_path.read_bytes()
-        pd.ExcelFile(io.BytesIO(raw), engine="openpyxl")  # verifica che sia un xlsx valido
+        pd.ExcelFile(io.BytesIO(raw), engine="openpyxl")
         return raw
     except Exception:
         return None
 
-_EI_LOCAL_AVAILABLE = _ei_local_bytes() is not None
+# Controlla solo l'esistenza del file all'avvio (evita di leggere 14 MB in fase di startup)
+_EI_LOCAL_AVAILABLE = Path(DATA_SOURCES["Energy Institute – Stats Review"]["local_file"]).exists()
 
 
 # ── Layout ───────────────────────────────────────────────────────────────────────
