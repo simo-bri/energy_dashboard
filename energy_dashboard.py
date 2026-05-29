@@ -1052,7 +1052,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
 
         fig.update_layout(hovermode="x unified", legend_title_text="Paese",
                           margin={"t": 40})
-        graph = dcc.Graph(figure=fig, style={"height": "520px"})
+        graph = dcc.Graph(figure=fig, style={"height": "600px"})
         return html.Div([warn, graph]) if warn else graph
 
     # ── Confronto ──────────────────────────────────────────────────────────────
@@ -1144,7 +1144,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                               title=lbl,
                               labels={yc: "Anno", "value": y_lbl, cc: "Paese"})
                 fig.update_layout(hovermode="x unified", margin={"t": 40})
-                graphs.append(dcc.Graph(figure=fig, style={"height": "420px"}))
+                graphs.append(dcc.Graph(figure=fig, style={"height": "580px"}))
 
         # ── Snapshot anno ──────────────────────────────────────────────────
         elif cmp_mode == "snapshot":
@@ -1162,7 +1162,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                                  title=f"{lbl0}  –  {year}",
                                  labels={"value": y_label, cc: "Paese"})
                     fig.update_layout(showlegend=False, margin={"t": 40})
-                    graphs.append(dcc.Graph(figure=fig, style={"height": "420px"}))
+                    graphs.append(dcc.Graph(figure=fig, style={"height": "580px"}))
             else:
                 frames = []
                 for m in metrics_plot:
@@ -1178,7 +1178,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                                  labels={"value": ei_unit or "Valore", cc: "Paese",
                                          "metrica": "Metrica"})
                     fig.update_layout(margin={"t": 40})
-                    graphs.append(dcc.Graph(figure=fig, style={"height": "460px"}))
+                    graphs.append(dcc.Graph(figure=fig, style={"height": "540px"}))
 
         # ── Scatter X vs Y ─────────────────────────────────────────────────
         elif cmp_mode == "scatter":
@@ -1201,7 +1201,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                                      cc: "Paese"})
             fig.update_traces(textposition="top center", marker_size=10)
             fig.update_layout(margin={"t": 40})
-            graphs.append(dcc.Graph(figure=fig, style={"height": "500px"}))
+            graphs.append(dcc.Graph(figure=fig, style={"height": "580px"}))
 
         # ── Radar multi-metrica ────────────────────────────────────────────
         elif cmp_mode == "radar":
@@ -1314,7 +1314,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
 
         # ── 3. Bar chart di tutti i paesi nel ranking ─────────────────────────
         n_paesi = len(rank_df)
-        bar_h = max(380, n_paesi * 22)
+        bar_h = max(460, n_paesi * 26)
         fig_bar = px.bar(
             rank_df, x="Valore", y="Paese", orientation="h",
             color="Valore", color_continuous_scale="Blues",
@@ -1360,7 +1360,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
             ),
             dbc.Row([
                 dbc.Col(dcc.Graph(figure=fig_bar,  style={"height": f"{bar_h}px"}), width=6),
-                dbc.Col(dcc.Graph(figure=fig_trend, style={"height": "380px"}), width=6),
+                dbc.Col(dcc.Graph(figure=fig_trend, style={"height": "460px"}), width=6),
             ], className="mt-4 g-3"),
         ])
 
