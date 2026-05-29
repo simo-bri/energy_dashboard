@@ -481,8 +481,11 @@ sidebar = dbc.Col(
         html.Div(id="panel-chart", style={"display": "none"}, children=[
             html.Hr(),
             html.H5("Grafico", className="fw-bold"),
-            html.Label("Metrica", className="small"),
-            dcc.Dropdown(id="chart-metric", className="mb-2", clearable=False),
+            # Metrica (solo OWID — nascosta per EI e WDI che hanno chart-indicator)
+            html.Div(id="chart-metric-wrap", children=[
+                html.Label("Metrica", className="small"),
+                dcc.Dropdown(id="chart-metric", className="mb-2", clearable=False),
+            ]),
             html.Div(id="chart-indicator-wrap", style={"display": "none"}, children=[
                 html.Label("Indicatore", className="small"),
                 dcc.Dropdown(id="chart-indicator", className="mb-2", clearable=False),
@@ -558,9 +561,9 @@ sidebar = dbc.Col(
 )
 
 main_area = dbc.Col(
+    id="main-col",
     className="app-main",
-    xs=8,
-    md=9,
+    width=9,
     children=[
         html.Div(id="alert-area"),
         html.Div(id="summary-banner", className="mb-3"),
@@ -652,6 +655,13 @@ app.layout = dbc.Container(fluid=True, className="p-0", children=[
                            "padding": "0 0.75rem 0 0", "textDecoration": "none"},
                 ),
                 html.H3("⚡ Energy Data Analysis Platform"),
+                # Pulsante collassa/espandi sidebar (solo desktop)
+                dbc.Button(
+                    "◀",
+                    id="btn-sidebar-desktop",
+                    color="link",
+                    className="d-none d-md-inline-flex",
+                ),
             ],
         ),
     ), className="g-0"),
@@ -676,11 +686,35 @@ app.clientside_callback(
         return ['app-sidebar', 'sidebar-backdrop'];
     }
     """,
-    Output("sidebar-col",      "className"),
+    Output("sidebar-col",      "className", allow_duplicate=True),
     Output("sidebar-backdrop", "className"),
     Input("btn-hamburger",     "n_clicks"),
     Input("btn-sidebar-close", "n_clicks"),
     Input("sidebar-backdrop",  "n_clicks"),
+    prevent_initial_call=True,
+)
+
+
+# 0b. Toggle sidebar desktop (◀ collassa / ▶ espandi)
+app.clientside_callback(
+    """
+    function(n, sidebar_cls, main_cls) {
+        if (!n) return [window.dash_clientside.no_update,
+                        window.dash_clientside.no_update,
+                        window.dash_clientside.no_update];
+        var collapsed = sidebar_cls && sidebar_cls.includes('sidebar-collapsed');
+        if (collapsed) {
+            return ['app-sidebar', 'app-main', '◀'];
+        }
+        return ['app-sidebar sidebar-collapsed', 'app-main sidebar-collapsed', '▶'];
+    }
+    """,
+    Output("sidebar-col",       "className", allow_duplicate=True),
+    Output("main-col",          "className"),
+    Output("btn-sidebar-desktop", "children"),
+    Input("btn-sidebar-desktop", "n_clicks"),
+    State("sidebar-col",         "className"),
+    State("main-col",            "className"),
     prevent_initial_call=True,
 )
 
@@ -827,6 +861,7 @@ def load_data(_, source, ei_contents, ei_sheet, wdi_codes):
     Output("stats-metric",         "options"),
     Output("stats-metric",         "value"),
     Output("summary-banner",       "children"),
+    Output("chart-metric-wrap",    "style"),
     Input("store-key",  "data"),
     State("store-meta", "data"),
 )
@@ -834,7 +869,7 @@ def update_controls(key, meta):
     none14 = ([], [], 1960, 2026, [2000, 2026],
               [], None, [], None, {"display": "none"},
               [], [], [], None, [], None, [], [], [], None, {"display": "none"},
-              [], None, html.Div())
+              [], None, html.Div(), {"display": "block"})
     if not key or not meta or key not in _CACHE:
         return none14
 
@@ -916,6 +951,9 @@ def update_controls(key, meta):
     # Nasconde "Metrica principale" per fonti con una sola metrica (EI per foglio)
     metric_wrap_style = {"display": "block"} if len(m_opts) > 1 else {"display": "none"}
 
+    # chart-metric-wrap: visibile solo per OWID (wide); per EI e WDI usa chart-indicator
+    chart_metric_wrap_style = {"display": "block"} if fmt == "wide" else {"display": "none"}
+
     # stats-metric: per WDI usa indicatori, per gli altri usa m_opts
     stats_opts = ind_opts if (ic and ind_opts) else m_opts
     stats_val  = ind_val  if (ic and ind_opts) else m_val
@@ -924,7 +962,7 @@ def update_controls(key, meta):
             m_opts, m_val, ind_opts, ind_val, ind_style,
             country_opts, [], m_opts, cmp_m_val, m_opts, cmp_m_b,
             m_opts, [], year_opts, y_max, metric_wrap_style,
-            stats_opts, stats_val, banner)
+            stats_opts, stats_val, banner, chart_metric_wrap_style)
 
 
 # 4b. Mostra/nascondi pannelli sidebar in base al tab attivo

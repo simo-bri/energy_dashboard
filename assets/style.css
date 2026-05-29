@@ -375,7 +375,7 @@ body {
 /* Tab content */
 .tab-content-area {
     padding: 1.75rem;
-    min-height: calc(100vh - 260px);
+    min-height: 500px;
     background: white;
 }
 
@@ -520,19 +520,6 @@ body {
         background-color: rgba(37, 99, 235, 0.035) !important;
     }
 
-    /* ── Charts: leggermente più alti su schermi grandi ─── */
-    @media (min-width: 1400px) {
-        .tab-content-area .dash-graph {
-            height: 680px !important;
-            min-height: 680px !important;
-        }
-        .tab-content-area .dash-graph > div,
-        .tab-content-area .dash-graph .js-plotly-plot,
-        .tab-content-area .dash-graph .plot-container {
-            height: 680px !important;
-        }
-    }
-
     /* ── Tab content: testo più leggibile ───────────────── */
     .tab-content-area {
         font-size: 0.88rem;
@@ -553,6 +540,51 @@ body {
     }
     .app-sidebar > hr:first-of-type {
         margin-top: 1.1rem !important;
+    }
+
+    /* ── Sidebar collassabile su desktop ─────────────────── */
+    #sidebar-col.sidebar-collapsed {
+        flex: 0 0 0 !important;
+        max-width: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        min-height: 0 !important;
+    }
+    #main-col.sidebar-collapsed {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Pulsante toggle desktop */
+    #btn-sidebar-desktop {
+        margin-left: auto;
+        background: rgba(255,255,255,0.1) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        border-radius: 7px !important;
+        color: white !important;
+        font-size: 0.95rem !important;
+        padding: 0.3rem 0.65rem !important;
+        transition: background 0.2s, transform 0.25s ease !important;
+        line-height: 1 !important;
+    }
+    #btn-sidebar-desktop:hover {
+        background: rgba(255,255,255,0.2) !important;
+    }
+    #btn-sidebar-desktop.collapsed {
+        transform: rotate(180deg);
+    }
+}
+
+/* Charts più alti su schermi grandi (xl) — blocco separato */
+@media (min-width: 1400px) {
+    .tab-content-area .dash-graph {
+        height: 680px !important;
+        min-height: 680px !important;
+    }
+    .tab-content-area .dash-graph > div,
+    .tab-content-area .dash-graph .js-plotly-plot,
+    .tab-content-area .dash-graph .plot-container {
+        height: 680px !important;
     }
 }
 
