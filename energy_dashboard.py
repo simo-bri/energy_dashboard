@@ -377,21 +377,8 @@ _UPLOAD_STYLE = {
 
 sidebar = dbc.Col(
     className="app-sidebar",
-    xs=12,
-    md=3,
+    width=3,
     children=[
-        dbc.Button(
-            "☰  Filtri & Controlli",
-            id="btn-sidebar-toggle",
-            color="link",
-            size="sm",
-            className="d-md-none w-100 text-start mb-2",
-            style={"color": "#94a3b8", "paddingLeft": 0, "fontSize": "0.85rem"},
-        ),
-        dbc.Collapse(
-            id="sidebar-collapse",
-            is_open=True,
-            children=[
         html.H5("Fonte dati", className="fw-bold"),
         dcc.Dropdown(
             id="source-select",
@@ -554,15 +541,12 @@ sidebar = dbc.Col(
             dcc.Dropdown(id="stats-metric", className="mb-2", clearable=False,
                          placeholder="Seleziona metrica…"),
         ]),
-            ],
-        ),
     ],
 )
 
 main_area = dbc.Col(
     className="app-main",
-    xs=12,
-    md=9,
+    width=9,
     children=[
         html.Div(id="alert-area"),
         html.Div(id="summary-banner", className="mb-3"),
@@ -906,17 +890,6 @@ def toggle_sidebar_panels(tab):
     return (show if tab == "tab-chart"   else hide,
             show if tab == "tab-compare" else hide,
             show if tab == "tab-stats"   else hide)
-
-
-# 4b-mobile. Toggle sidebar su smartphone
-@app.callback(
-    Output("sidebar-collapse", "is_open"),
-    Input("btn-sidebar-toggle", "n_clicks"),
-    State("sidebar-collapse", "is_open"),
-    prevent_initial_call=True,
-)
-def toggle_sidebar(_, is_open):
-    return not is_open
 
 
 # 4c. Mostra/nascondi controlli confronto in base alla modalità
