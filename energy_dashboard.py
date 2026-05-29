@@ -308,13 +308,13 @@ def load_wdi(codes: tuple) -> pd.DataFrame:
 # ── Helpers ──────────────────────────────────────────────────────────────────────
 def _apply_filters(df: pd.DataFrame, meta: dict,
                    countries: list, years: list) -> pd.DataFrame:
-    out = df.copy()
     cc, yc = meta["country_col"], meta["year_col"]
+    mask = pd.Series(True, index=df.index)
     if countries:
-        out = out[out[cc].isin(countries)]
+        mask &= df[cc].isin(countries)
     if years and len(years) == 2:
-        out = out[out[yc].between(years[0], years[1])]
-    return out
+        mask &= df[yc].between(years[0], years[1])
+    return df[mask]
 
 
 def _make_fig(sub: pd.DataFrame, x: str, y: str, color: str,
@@ -1011,7 +1011,7 @@ def toggle_compare_controls(mode):
     Input("cmp-metrics-extra",  "value"),
     Input("cmp-year",           "value"),
     Input("stats-metric",       "value"),
-    State("store-key",  "data"),
+    Input("store-key",          "data"),
     State("store-meta", "data"),
 )
 def render_tab(tab, countries, years, metric, indicator, chart_type,
@@ -1042,10 +1042,27 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
 
     # ── Tabella ────────────────────────────────────────────────────────────────
     if tab == "tab-table":
-        cols = [{"name": c, "id": c} for c in filtered.columns]
-        data = filtered.to_dict("records")
-        return html.Div([
-            html.P(f"{len(filtered):,} righe totali",
+        total_rows = len(filtered)
+        ROW_LIMIT  = 10_000
+        display_df = filtered.iloc[:ROW_LIMIT]
+        cols = [{"name": c, "id": c} for c in display_df.columns]
+        data = display_df.to_dict("records")
+        notices = []
+        if not countries:
+            notices.append(dbc.Alert(
+                "💡 Nessun paese selezionato — seleziona uno o più paesi dalla sidebar "
+                "per filtrare i dati.",
+                color="info", className="py-2 small mb-2",
+            ))
+        if total_rows > ROW_LIMIT:
+            notices.append(dbc.Alert(
+                f"⚠️ Dati troncati: vengono mostrate le prime {ROW_LIMIT:,} righe "
+                f"su {total_rows:,} totali. Filtra per paese e/o intervallo anni per ridurre.",
+                color="warning", className="py-2 small mb-2",
+            ))
+        return html.Div(notices + [
+            html.P(f"{total_rows:,} righe totali  •  mostrando le prime "
+                   f"{min(total_rows, ROW_LIMIT):,}",
                    className="text-muted small mb-1"),
             dash_table.DataTable(
                 columns=cols,
@@ -1062,6 +1079,17 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
 
     # ── Grafico ────────────────────────────────────────────────────────────────
     if tab == "tab-chart":
+        # Guardia: troppi paesi non filtrati → browser freeze
+        n_countries_in_data = filtered[cc].nunique()
+        if not countries and n_countries_in_data > 30:
+            return dbc.Alert(
+                [html.Strong("Seleziona almeno un paese dalla sidebar "),
+                 html.Span(f"per visualizzare il grafico. "
+                           f"({n_countries_in_data} paesi disponibili nei dati — "
+                           "disegnarli tutti rallenterebbe il browser).")],
+                color="info",
+            )
+
         if fmt == "wide":
             if not metric:
                 return dbc.Alert("Seleziona una metrica dalla sidebar.", color="info")
@@ -1098,6 +1126,16 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
         if not cmp_metric_a:
             return dbc.Alert("Seleziona almeno la metrica principale nella sidebar.",
                              color="info")
+
+        # Guardia: troppi paesi non filtrati e nessuna selezione specifica → browser freeze
+        n_countries_in_data = filtered[cc].nunique()
+        if not countries and not cmp_countries and n_countries_in_data > 30:
+            return dbc.Alert(
+                [html.Strong("Seleziona almeno un paese "),
+                 html.Span("nei filtri globali o nel campo «Paesi da confrontare» "
+                           f"({n_countries_in_data} paesi disponibili).")],
+                color="info",
+            )
 
         # Paesi da usare: selezione specifica o tutti i filtrati
         cmp_cc = cmp_countries if cmp_countries else filtered[cc].dropna().unique().tolist()
