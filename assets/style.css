@@ -487,132 +487,122 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Mobile / Responsive  (max-width: 767px = Bootstrap < md)
-   Sidebar a sinistra — layout ergonomico, pagina verticale lunga
+   Backdrop sidebar (visibile su mobile quando il drawer è aperto)
+   ═══════════════════════════════════════════════════════════ */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.52);
+    z-index: 1044;
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+}
+.sidebar-backdrop.show { display: block; }
+
+/* ═══════════════════════════════════════════════════════════
+   Mobile / Responsive  (max-width: 767px)
+   Sidebar = drawer overlay · Main = piena larghezza
    ═══════════════════════════════════════════════════════════ */
 @media (max-width: 767px) {
 
-    /* ── Header ──────────────────────────────────────────── */
+    /* ── Header sticky con hamburger ─────────────────────── */
     .app-header {
-        padding: 0.7rem 0.85rem !important;
+        padding: 0.7rem 1rem !important;
+        position: sticky;
+        top: 0;
+        z-index: 1050;
+        display: flex;
+        align-items: center;
     }
-    .app-header h3 {
-        font-size: 0.9rem !important;
-    }
+    .app-header h3 { font-size: 0.92rem !important; }
 
-    /* ── Sidebar: scorre con la pagina (no altezza fissa) ── */
-    .app-sidebar {
-        padding: 0.85rem 0.6rem !important;
-        min-height: auto !important;
-        overflow: visible;
+    /* ── Sidebar: drawer che scorre da sinistra ──────────── */
+    #sidebar-col {
+        position: fixed !important;
+        left: -110% !important;
+        top: 0 !important;
+        height: 100vh !important;
+        width: 82% !important;
+        max-width: 310px !important;
+        z-index: 1045 !important;
+        transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 1.1rem 1rem !important;
+        box-shadow: none !important;
     }
-    .app-sidebar h5 {
-        font-size: 0.64rem !important;
-        margin-bottom: 0.55rem !important;
+    #sidebar-col.sidebar-open {
+        left: 0 !important;
+        box-shadow: 6px 0 28px rgba(0, 0, 0, 0.6) !important;
     }
-    .app-sidebar label,
-    .app-sidebar .small {
-        font-size: 0.7rem !important;
-        margin-bottom: 0.35rem;
+    /* Font e spaziature normali nella sidebar aperta */
+    #sidebar-col .app-sidebar { min-height: auto !important; }
+
+    /* Target touch più alti per i dropdown nella sidebar */
+    #sidebar-col .Select-control,
+    #sidebar-col .Select--multi .Select-control {
+        min-height: 42px !important;
     }
-    .app-sidebar hr {
-        margin: 0.9rem 0 !important;
+    #sidebar-col .Select-option {
+        padding: 10px 12px !important;
+        font-size: 0.82rem !important;
     }
-    /* Dropdown leggibili e con target touch più alti */
-    .app-sidebar .Select-control,
-    .app-sidebar .Select--multi .Select-control {
-        min-height: 40px !important;
-    }
-    .app-sidebar .Select-placeholder,
-    .app-sidebar .Select-value-label {
-        font-size: 0.75rem !important;
-    }
-    .app-sidebar .Select-option {
+    #sidebar-col .form-check { margin-bottom: 0.45rem; }
+    #sidebar-col .btn {
+        padding: 0.55rem 0.75rem !important;
         font-size: 0.8rem !important;
-        padding: 10px 10px !important;
-    }
-    /* Radio items: più spazio verticale per il tocco */
-    .app-sidebar .form-check-label {
-        font-size: 0.75rem !important;
-    }
-    .app-sidebar .form-check {
-        margin-bottom: 0.4rem;
-    }
-    /* Pulsanti: alti e comodi da toccare */
-    .app-sidebar .btn {
-        font-size: 0.78rem !important;
-        padding: 0.6rem 0.6rem !important;
     }
 
-    /* ── Main area ───────────────────────────────────────── */
+    /* ── Main area: piena larghezza ──────────────────────── */
     .app-main {
-        padding: 0.75rem !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0.85rem !important;
     }
 
-    /* ── Summary banner: 2×2 grid, card più alte ─────────── */
-    #summary-banner .card-title {
-        font-size: 1.35rem !important;
-    }
-    #summary-banner .card-body {
-        padding: 0.75rem 0.85rem !important;
-    }
-    #summary-banner .card-subtitle {
-        font-size: 0.58rem !important;
-    }
+    /* ── Summary banner 2×2 ─────────────────────────────── */
+    #summary-banner .card-title    { font-size: 1.3rem !important; }
+    #summary-banner .card-body     { padding: 0.7rem 0.9rem !important; }
+    #summary-banner .card-subtitle { font-size: 0.6rem !important; }
 
     /* ── Tabs ────────────────────────────────────────────── */
     .dash-tabs.tabs {
         padding: 0.4rem 0.4rem 0 !important;
-        gap: 2px;
         overflow-x: auto;
         flex-wrap: nowrap;
+        gap: 2px;
     }
     .dash-tab.tab {
-        font-size: 0.72rem !important;
-        padding: 0.5rem 0.6rem !important;
+        font-size: 0.73rem !important;
+        padding: 0.45rem 0.6rem !important;
         white-space: nowrap;
     }
-    .tab-content-area {
-        padding: 0.75rem !important;
-        min-height: auto;
-    }
+    .tab-content-area { padding: 0.85rem !important; }
 
-    /* ── Grafici: alti per leggibilità (pagina si allunga) ─ */
+    /* ── Grafici ─────────────────────────────────────────── */
     .dash-graph {
-        height: 420px !important;
-        min-height: 420px !important;
-        max-height: 420px !important;
+        height: 320px !important;
+        min-height: 320px !important;
+        max-height: 320px !important;
         margin-bottom: 0.5rem;
     }
     .dash-graph > div,
     .dash-graph .js-plotly-plot,
     .dash-graph .plot-container {
-        height: 420px !important;
+        height: 320px !important;
     }
-
-    /* In confronto: le colonne affiancate diventano impilate */
+    /* In statistiche: colonne affiancate → impilate */
     .tab-content-area .row > [class*="col-"] {
         flex: 0 0 100% !important;
         max-width: 100% !important;
     }
 
-    /* ── DataTable: scroll orizzontale ──────────────────── */
-    .dash-spreadsheet-container {
-        overflow-x: auto !important;
-    }
-    .dash-cell, .dash-header {
-        font-size: 0.72rem !important;
-        padding: 5px 7px !important;
-        white-space: nowrap;
-        min-width: 70px;
-    }
+    /* ── DataTable ───────────────────────────────────────── */
+    .dash-spreadsheet-container { overflow-x: auto !important; }
+    .dash-cell, .dash-header    { white-space: nowrap; min-width: 70px; }
 
-    /* ── Range slider ────────────────────────────────────── */
-    .rc-slider-tooltip {
-        display: block !important;
-    }
-    .rc-slider-tooltip-inner {
-        font-size: 0.66rem !important;
-        padding: 3px 6px !important;
-    }
+    /* ── Spinner sidebar: non mostrato su mobile ─────────── */
+    #sidebar-spinner { display: none !important; }
 }

@@ -376,10 +376,22 @@ _UPLOAD_STYLE = {
 }
 
 sidebar = dbc.Col(
+    id="sidebar-col",
     className="app-sidebar",
-    xs=4,
-    md=3,
+    width=3,
     children=[
+        # Intestazione drawer (solo mobile)
+        html.Div(
+            className="d-flex justify-content-between align-items-center d-md-none mb-3",
+            children=[
+                html.Span("Filtri & Controlli",
+                          style={"color": "#f1f5f9", "fontWeight": 600,
+                                 "fontSize": "0.9rem", "letterSpacing": "0.02em"}),
+                dbc.Button("✕", id="btn-sidebar-close", color="link", size="sm",
+                           style={"color": "#94a3b8", "fontSize": "1.1rem",
+                                  "padding": "0 4px", "lineHeight": "1"}),
+            ],
+        ),
         html.H5("Fonte dati", className="fw-bold"),
         dcc.Dropdown(
             id="source-select",
@@ -629,14 +641,49 @@ app.layout = dbc.Container(fluid=True, className="p-0", children=[
     dbc.Row(dbc.Col(
         html.Div(
             className="app-header",
-            children=html.H3("⚡ Energy Data Analysis Platform"),
+            children=[
+                # Hamburger (solo mobile)
+                dbc.Button(
+                    "☰",
+                    id="btn-hamburger",
+                    color="link",
+                    className="d-md-none",
+                    style={"color": "white", "fontSize": "1.4rem", "lineHeight": "1",
+                           "padding": "0 0.75rem 0 0", "textDecoration": "none"},
+                ),
+                html.H3("⚡ Energy Data Analysis Platform"),
+            ],
         ),
     ), className="g-0"),
+    # Backdrop overlay (mobile)
+    html.Div(id="sidebar-backdrop", className="sidebar-backdrop"),
     dbc.Row([sidebar, main_area], className="g-0"),
 ])
 
 
 # ── Callbacks ────────────────────────────────────────────────────────────────────
+
+# 0. Drawer sidebar mobile (hamburger apre, ✕ o backdrop chiude)
+app.clientside_callback(
+    """
+    function(n_open, n_close, n_backdrop) {
+        const ctx = dash_clientside.callback_context;
+        if (!ctx.triggered.length) return [window.dash_clientside.no_update, window.dash_clientside.no_update];
+        const tid = ctx.triggered[0].prop_id.split('.')[0];
+        if (tid === 'btn-hamburger') {
+            return ['app-sidebar sidebar-open', 'sidebar-backdrop show'];
+        }
+        return ['app-sidebar', 'sidebar-backdrop'];
+    }
+    """,
+    Output("sidebar-col",      "className"),
+    Output("sidebar-backdrop", "className"),
+    Input("btn-hamburger",     "n_clicks"),
+    Input("btn-sidebar-close", "n_clicks"),
+    Input("sidebar-backdrop",  "n_clicks"),
+    prevent_initial_call=True,
+)
+
 
 # 1. Mostra/nascondi opzioni specifiche per fonte
 @app.callback(
