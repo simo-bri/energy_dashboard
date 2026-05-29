@@ -4,3 +4,4 @@ plotly==6.7.0
 pandas==3.0.2
 requests==2.33.1
 openpyxl==3.1.5
+gunicorn==23.0.0
