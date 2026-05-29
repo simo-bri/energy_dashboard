@@ -485,4 +485,93 @@ body {
 .dash-spreadsheet-container {
     animation: fadeInUp 0.35s ease-out both;
 }
-/* TEST */
+
+/* ═══════════════════════════════════════════════════════════
+   Mobile / Responsive  (max-width: 767px = Bootstrap < md)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+
+    /* ── Header ──────────────────────────────────────────── */
+    .app-header {
+        padding: 0.65rem 1rem !important;
+    }
+    .app-header h3 {
+        font-size: 0.95rem !important;
+    }
+
+    /* ── Sidebar: stacked full-width ─────────────────────── */
+    .app-sidebar {
+        min-height: auto !important;
+        padding: 0.75rem 0.85rem !important;
+        border-right: none !important;
+        border-bottom: 2px solid #1e293b;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    /* Toggle button sidebar */
+    .app-sidebar .btn-link {
+        font-size: 0.82rem !important;
+        letter-spacing: 0.04em;
+        text-decoration: none !important;
+    }
+
+    /* ── Main area ───────────────────────────────────────── */
+    .app-main {
+        padding: 0.85rem !important;
+    }
+
+    /* ── Summary banner: 2×2 grid ────────────────────────── */
+    #summary-banner .card-title {
+        font-size: 1.4rem !important;
+    }
+    #summary-banner .card-body {
+        padding: 0.65rem 0.85rem !important;
+    }
+    #summary-banner .card-subtitle {
+        font-size: 0.6rem !important;
+    }
+
+    /* ── Tabs ────────────────────────────────────────────── */
+    .dash-tabs.tabs {
+        padding: 0.4rem 0.4rem 0 !important;
+        gap: 2px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+    .dash-tab.tab {
+        font-size: 0.72rem !important;
+        padding: 0.4rem 0.55rem !important;
+        white-space: nowrap;
+    }
+    .tab-content-area {
+        padding: 0.85rem !important;
+    }
+
+    /* ── Grafici: altezza ridotta ────────────────────────── */
+    .dash-graph {
+        height: 310px !important;
+        min-height: 310px !important;
+        max-height: 310px !important;
+    }
+    .dash-graph > div,
+    .dash-graph .js-plotly-plot,
+    .dash-graph .plot-container {
+        height: 310px !important;
+    }
+
+    /* ── DataTable: scroll orizzontale ──────────────────── */
+    .dash-spreadsheet-container {
+        overflow-x: auto !important;
+    }
+    .dash-cell, .dash-header {
+        min-width: 80px;
+        white-space: nowrap;
+    }
+
+    /* ── Range slider tooltip sempre visibile ────────────── */
+    .rc-slider-tooltip {
+        display: block !important;
+    }
+}
