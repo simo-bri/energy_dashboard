@@ -377,7 +377,8 @@ _UPLOAD_STYLE = {
 
 sidebar = dbc.Col(
     className="app-sidebar",
-    width=3,
+    xs=4,
+    md=3,
     children=[
         html.H5("Fonte dati", className="fw-bold"),
         dcc.Dropdown(
@@ -546,7 +547,8 @@ sidebar = dbc.Col(
 
 main_area = dbc.Col(
     className="app-main",
-    width=9,
+    xs=8,
+    md=9,
     children=[
         html.Div(id="alert-area"),
         html.Div(id="summary-banner", className="mb-3"),

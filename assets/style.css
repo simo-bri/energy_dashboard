@@ -488,97 +488,112 @@ body {
 
 /* ═══════════════════════════════════════════════════════════
    Mobile / Responsive  (max-width: 767px = Bootstrap < md)
-   Sidebar rimane a sinistra — ottimizzata per spazio ridotto
+   Sidebar a sinistra — layout ergonomico, pagina verticale lunga
    ═══════════════════════════════════════════════════════════ */
 @media (max-width: 767px) {
 
-    /* ── Header compatto ─────────────────────────────────── */
+    /* ── Header ──────────────────────────────────────────── */
     .app-header {
-        padding: 0.55rem 0.75rem !important;
+        padding: 0.7rem 0.85rem !important;
     }
     .app-header h3 {
-        font-size: 0.82rem !important;
+        font-size: 0.9rem !important;
     }
 
-    /* ── Sidebar: stretta ma leggibile ───────────────────── */
+    /* ── Sidebar: scorre con la pagina (no altezza fissa) ── */
     .app-sidebar {
-        padding: 0.6rem 0.5rem !important;
-        overflow-y: auto;
-        overflow-x: hidden;
-        max-height: 100vh;
+        padding: 0.85rem 0.6rem !important;
+        min-height: auto !important;
+        overflow: visible;
     }
     .app-sidebar h5 {
-        font-size: 0.58rem !important;
-        margin-bottom: 0.4rem !important;
+        font-size: 0.64rem !important;
+        margin-bottom: 0.55rem !important;
     }
     .app-sidebar label,
     .app-sidebar .small {
-        font-size: 0.62rem !important;
+        font-size: 0.7rem !important;
+        margin-bottom: 0.35rem;
     }
     .app-sidebar hr {
-        margin: 0.6rem 0 !important;
+        margin: 0.9rem 0 !important;
     }
-    /* Dropdown sidebar su mobile */
+    /* Dropdown leggibili e con target touch più alti */
+    .app-sidebar .Select-control,
+    .app-sidebar .Select--multi .Select-control {
+        min-height: 40px !important;
+    }
     .app-sidebar .Select-placeholder,
     .app-sidebar .Select-value-label {
-        font-size: 0.68rem !important;
+        font-size: 0.75rem !important;
     }
     .app-sidebar .Select-option {
-        font-size: 0.72rem !important;
-        padding: 6px 8px !important;
+        font-size: 0.8rem !important;
+        padding: 10px 10px !important;
     }
-    /* Radio items più compatti */
+    /* Radio items: più spazio verticale per il tocco */
     .app-sidebar .form-check-label {
-        font-size: 0.68rem !important;
+        font-size: 0.75rem !important;
     }
-    /* Pulsanti sidebar */
+    .app-sidebar .form-check {
+        margin-bottom: 0.4rem;
+    }
+    /* Pulsanti: alti e comodi da toccare */
     .app-sidebar .btn {
-        font-size: 0.7rem !important;
-        padding: 0.35rem 0.5rem !important;
+        font-size: 0.78rem !important;
+        padding: 0.6rem 0.6rem !important;
     }
 
     /* ── Main area ───────────────────────────────────────── */
     .app-main {
-        padding: 0.6rem !important;
+        padding: 0.75rem !important;
     }
 
-    /* ── Summary banner: 2×2 grid ────────────────────────── */
+    /* ── Summary banner: 2×2 grid, card più alte ─────────── */
     #summary-banner .card-title {
-        font-size: 1.1rem !important;
+        font-size: 1.35rem !important;
     }
     #summary-banner .card-body {
-        padding: 0.5rem 0.6rem !important;
+        padding: 0.75rem 0.85rem !important;
     }
     #summary-banner .card-subtitle {
-        font-size: 0.55rem !important;
+        font-size: 0.58rem !important;
     }
 
     /* ── Tabs ────────────────────────────────────────────── */
     .dash-tabs.tabs {
-        padding: 0.3rem 0.3rem 0 !important;
-        gap: 1px;
+        padding: 0.4rem 0.4rem 0 !important;
+        gap: 2px;
         overflow-x: auto;
         flex-wrap: nowrap;
     }
     .dash-tab.tab {
-        font-size: 0.66rem !important;
-        padding: 0.35rem 0.4rem !important;
+        font-size: 0.72rem !important;
+        padding: 0.5rem 0.6rem !important;
         white-space: nowrap;
     }
     .tab-content-area {
-        padding: 0.6rem !important;
+        padding: 0.75rem !important;
+        min-height: auto;
     }
 
-    /* ── Grafici: altezza ridotta ────────────────────────── */
+    /* ── Grafici: alti per leggibilità (pagina si allunga) ─ */
     .dash-graph {
-        height: 260px !important;
-        min-height: 260px !important;
-        max-height: 260px !important;
+        height: 420px !important;
+        min-height: 420px !important;
+        max-height: 420px !important;
+        margin-bottom: 0.5rem;
     }
     .dash-graph > div,
     .dash-graph .js-plotly-plot,
     .dash-graph .plot-container {
-        height: 260px !important;
+        height: 420px !important;
+    }
+
+    /* In confronto: le colonne affiancate diventano impilate */
+    .tab-content-area .row > [class*="col-"] {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
     }
 
     /* ── DataTable: scroll orizzontale ──────────────────── */
@@ -586,10 +601,10 @@ body {
         overflow-x: auto !important;
     }
     .dash-cell, .dash-header {
-        font-size: 0.68rem !important;
-        padding: 3px 5px !important;
+        font-size: 0.72rem !important;
+        padding: 5px 7px !important;
         white-space: nowrap;
-        min-width: 60px;
+        min-width: 70px;
     }
 
     /* ── Range slider ────────────────────────────────────── */
@@ -597,7 +612,7 @@ body {
         display: block !important;
     }
     .rc-slider-tooltip-inner {
-        font-size: 0.62rem !important;
-        padding: 2px 5px !important;
+        font-size: 0.66rem !important;
+        padding: 3px 6px !important;
     }
 }
