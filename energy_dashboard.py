@@ -878,8 +878,9 @@ def load_data(n_clicks, ei_sheet, source, ei_contents, wdi_codes):
     Output("chart-metric-wrap",    "style"),
     Input("store-key",  "data"),
     State("store-meta", "data"),
+    State("filter-countries", "value"),
 )
-def update_controls(key, meta):
+def update_controls(key, meta, current_countries):
     none14 = ([], [], 1960, 2026, [2000, 2026],
               [], None, [], None, {"display": "none"},
               [], [], [], None, [], None, [], [], [], None, {"display": "none"},
@@ -895,6 +896,10 @@ def update_controls(key, meta):
 
     countries    = sorted(df[cc].dropna().unique())
     country_opts = [{"label": c, "value": c} for c in countries]
+
+    # Conserva la selezione corrente se i paesi esistono ancora nel nuovo dataset
+    countries_set    = set(countries)
+    preserved_countries = [c for c in (current_countries or []) if c in countries_set]
 
     y_min, y_max = int(df[yc].min()), int(df[yc].max())
     yr_val       = [max(y_min, y_max - 25), y_max]
@@ -972,7 +977,7 @@ def update_controls(key, meta):
     stats_opts = ind_opts if (ic and ind_opts) else m_opts
     stats_val  = ind_val  if (ic and ind_opts) else m_val
 
-    return (country_opts, [], y_min, y_max, yr_val,
+    return (country_opts, preserved_countries, y_min, y_max, yr_val,
             m_opts, m_val, ind_opts, ind_val, ind_style,
             country_opts, [], m_opts, cmp_m_val, m_opts, cmp_m_b,
             m_opts, [], year_opts, y_max, metric_wrap_style,
