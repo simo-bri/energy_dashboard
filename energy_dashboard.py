@@ -430,8 +430,6 @@ sidebar = dbc.Col(
                     ),
                 ],
             ),
-            dcc.Dropdown(id="ei-sheet", placeholder="Seleziona foglio…",
-                         className="mt-2", clearable=False),
         ]),
 
         html.Div(id="wdi-options", style={"display": "none"}, children=[
@@ -467,6 +465,14 @@ sidebar = dbc.Col(
 
         html.Hr(),
         html.H5("Filtri globali", className="fw-bold"),
+
+        # Foglio EI — visibile solo quando la fonte è Energy Institute
+        html.Div(id="ei-sheet-filter", style={"display": "none"}, children=[
+            html.Label("Foglio / Metrica EI", className="small"),
+            dcc.Dropdown(id="ei-sheet", placeholder="Seleziona foglio…",
+                         className="mb-3", clearable=False),
+        ]),
+
         html.Label("Paesi / Regioni", className="small"),
         dcc.Dropdown(id="filter-countries", multi=True,
                      placeholder="Seleziona paesi…", className="mb-3"),
@@ -721,15 +727,17 @@ app.clientside_callback(
 
 # 1. Mostra/nascondi opzioni specifiche per fonte
 @app.callback(
-    Output("ei-options",  "style"),
-    Output("wdi-options", "style"),
+    Output("ei-options",      "style"),
+    Output("wdi-options",     "style"),
+    Output("ei-sheet-filter", "style"),
     Input("source-select", "value"),
 )
 def toggle_source_panels(source):
     stype = DATA_SOURCES[source]["type"]
     show, hide = {"display": "block"}, {"display": "none"}
     return (show if stype == "ei"  else hide,
-            show if stype == "wdi" else hide)
+            show if stype == "wdi" else hide,
+            show if stype == "ei"  else hide)
 
 
 # 2. Aggiorna lista fogli EI (da file locale o upload)
@@ -761,14 +769,20 @@ def update_ei_sheets(source, contents):
     Output("store-key",  "data"),
     Output("store-meta", "data"),
     Output("alert-area", "children"),
-    Input("btn-load", "n_clicks"),
+    Input("btn-load",  "n_clicks"),
+    Input("ei-sheet",  "value"),          # auto-aggiorna al cambio foglio EI
     State("source-select",   "value"),
     State("ei-upload",       "contents"),
-    State("ei-sheet",        "value"),
     State("wdi-indicators",  "value"),
     prevent_initial_call=True,
 )
-def load_data(_, source, ei_contents, ei_sheet, wdi_codes):
+def load_data(n_clicks, ei_sheet, source, ei_contents, wdi_codes):
+    # Se il trigger è ei-sheet ma la fonte non è EI, ignora
+    triggered = dash.callback_context.triggered[0]["prop_id"].split(".")[0] \
+                if dash.callback_context.triggered else ""
+    if triggered == "ei-sheet" and DATA_SOURCES.get(source, {}).get("type") != "ei":
+        return no_update, no_update, no_update
+
     cfg   = DATA_SOURCES[source]
     stype = cfg["type"]
     try:
