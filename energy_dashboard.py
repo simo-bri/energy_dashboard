@@ -1119,42 +1119,56 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
 
     # ── Grafico ────────────────────────────────────────────────────────────────
     if tab == "tab-chart":
-        auto_note = None
-        if fmt == "wide":
-            if not metric:
-                return dbc.Alert("Seleziona una metrica dalla sidebar.", color="info")
-            sub = filtered[[cc, yc, metric]].dropna()
-            if not countries:
-                sub, auto_note = _auto_limit_countries(sub, cc)
-            metric_label = OWID_LABELS.get(metric, metric)
-            warn = _no_data_alert(sub, countries, cc)
-            if sub.empty:
-                return dbc.Alert("Nessun dato per la metrica selezionata con i filtri correnti.",
-                                 color="warning")
-            fig = _make_fig(sub, yc, metric, cc, chart_type or "Line", metric_label)
-            fig.update_layout(yaxis_title=metric_label)
-        else:
-            target_ind = indicator if ic else None
-            if target_ind and ic in filtered.columns:
-                sub = filtered[filtered[ic] == target_ind]
+        try:
+            auto_note = None
+            if fmt == "wide":
+                if not metric:
+                    return dbc.Alert("Seleziona una metrica dalla sidebar.", color="info")
+                sub = filtered[[cc, yc, metric]].dropna()
+                if not countries:
+                    sub, auto_note = _auto_limit_countries(sub, cc)
+                metric_label = OWID_LABELS.get(metric, metric)
+                warn = _no_data_alert(sub, countries, cc)
+                if sub.empty:
+                    return dbc.Alert("Nessun dato per la metrica selezionata con i filtri correnti.",
+                                     color="warning")
+                fig = _make_fig(sub, yc, metric, cc, chart_type or "Line", metric_label)
+                fig.update_layout(yaxis_title=metric_label)
             else:
-                sub = filtered
-            sub = sub.dropna(subset=["value"])
-            if not countries:
-                sub, auto_note = _auto_limit_countries(sub, cc)
-            warn = _no_data_alert(sub, countries, cc)
-            if sub.empty:
-                return dbc.Alert("Nessun dato per l'indicatore selezionato.", color="warning")
-            title = target_ind or (meta.get("sheet") or "value")
-            unit_label = _EI_UNITS.get(key, "Valore") if meta.get("type") == "ei" else "Valore"
-            fig = _make_fig(sub, yc, "value", cc, chart_type or "Line", title)
-            fig.update_layout(yaxis_title=unit_label)
+                # Per WDI/EI: determina l'indicatore da usare
+                target_ind = indicator if (ic and indicator) else None
+                # Fallback: se l'indicatore non è ancora impostato, prendi il primo disponibile
+                if target_ind is None and ic and ic in filtered.columns:
+                    avail = sorted(filtered[ic].dropna().unique())
+                    target_ind = avail[0] if avail else None
 
-        fig.update_layout(hovermode="x unified", legend_title_text="Paese",
-                          margin={"t": 40})
-        graph = dcc.Graph(figure=fig, style={"height": "600px"})
-        extras = [x for x in [auto_note, warn] if x]
-        return html.Div(extras + [graph]) if extras else graph
+                if target_ind and ic and ic in filtered.columns:
+                    sub = filtered[filtered[ic] == target_ind]
+                else:
+                    sub = filtered
+                sub = sub.dropna(subset=["value"])
+                if not countries:
+                    sub, auto_note = _auto_limit_countries(sub, cc)
+                warn = _no_data_alert(sub, countries, cc)
+                if sub.empty:
+                    return dbc.Alert("Nessun dato per l'indicatore selezionato.", color="warning")
+                title = target_ind or (meta.get("sheet") or "value")
+                unit_label = _EI_UNITS.get(key, "Valore") if meta.get("type") == "ei" else "Valore"
+                fig = _make_fig(sub, yc, "value", cc, chart_type or "Line", title)
+                fig.update_layout(yaxis_title=unit_label)
+
+            fig.update_layout(hovermode="x unified", legend_title_text="Paese",
+                              margin={"t": 40})
+            graph = dcc.Graph(figure=fig, style={"height": "600px"})
+            extras = [x for x in [auto_note, warn] if x]
+            return html.Div(extras + [graph]) if extras else graph
+
+        except Exception as exc:
+            return dbc.Alert(
+                [html.Strong("Errore nella generazione del grafico: "),
+                 html.Code(str(exc))],
+                color="danger", className="small",
+            )
 
     # ── Confronto ──────────────────────────────────────────────────────────────
     if tab == "tab-compare":
