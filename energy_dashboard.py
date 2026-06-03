@@ -328,6 +328,27 @@ def _make_fig(sub: pd.DataFrame, x: str, y: str, color: str,
     }.get(chart_type, lambda: px.line(**kw))()
 
 
+_MAX_CHART_COUNTRIES = 20   # massimo paesi in un grafico senza filtro esplicito
+
+
+def _auto_limit_countries(df: pd.DataFrame, cc: str,
+                           max_n: int = _MAX_CHART_COUNTRIES):
+    """Limita a max_n paesi (quelli con più righe/dati) se ce ne sono troppi.
+    Restituisce (df_limitato, banner_html | None)."""
+    n = df[cc].nunique()
+    if n <= max_n:
+        return df, None
+    keep = df[cc].value_counts().nlargest(max_n).index.tolist()
+    banner = dbc.Alert(
+        [html.Span(f"💡 Nessun paese selezionato — visualizzati i {max_n} paesi con "
+                   "più dati disponibili. "),
+         html.Span("Seleziona paesi specifici dalla sidebar per un confronto mirato.",
+                   className="text-muted")],
+        color="info", className="py-2 small mb-2",
+    )
+    return df[df[cc].isin(keep)], banner
+
+
 def _no_data_alert(sub: pd.DataFrame, requested: list, cc: str) -> "dbc.Alert | None":
     """Restituisce un Alert se alcuni paesi richiesti non hanno valori numerici nel sub."""
     if not requested:
@@ -1098,21 +1119,13 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
 
     # ── Grafico ────────────────────────────────────────────────────────────────
     if tab == "tab-chart":
-        # Guardia: troppi paesi non filtrati → browser freeze
-        n_countries_in_data = filtered[cc].nunique()
-        if not countries and n_countries_in_data > 30:
-            return dbc.Alert(
-                [html.Strong("Seleziona almeno un paese dalla sidebar "),
-                 html.Span(f"per visualizzare il grafico. "
-                           f"({n_countries_in_data} paesi disponibili nei dati — "
-                           "disegnarli tutti rallenterebbe il browser).")],
-                color="info",
-            )
-
+        auto_note = None
         if fmt == "wide":
             if not metric:
                 return dbc.Alert("Seleziona una metrica dalla sidebar.", color="info")
             sub = filtered[[cc, yc, metric]].dropna()
+            if not countries:
+                sub, auto_note = _auto_limit_countries(sub, cc)
             metric_label = OWID_LABELS.get(metric, metric)
             warn = _no_data_alert(sub, countries, cc)
             if sub.empty:
@@ -1127,6 +1140,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
             else:
                 sub = filtered
             sub = sub.dropna(subset=["value"])
+            if not countries:
+                sub, auto_note = _auto_limit_countries(sub, cc)
             warn = _no_data_alert(sub, countries, cc)
             if sub.empty:
                 return dbc.Alert("Nessun dato per l'indicatore selezionato.", color="warning")
@@ -1138,7 +1153,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
         fig.update_layout(hovermode="x unified", legend_title_text="Paese",
                           margin={"t": 40})
         graph = dcc.Graph(figure=fig, style={"height": "600px"})
-        return html.Div([warn, graph]) if warn else graph
+        extras = [x for x in [auto_note, warn] if x]
+        return html.Div(extras + [graph]) if extras else graph
 
     # ── Confronto ──────────────────────────────────────────────────────────────
     if tab == "tab-compare":
@@ -1146,18 +1162,32 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
             return dbc.Alert("Seleziona almeno la metrica principale nella sidebar.",
                              color="info")
 
-        # Guardia: troppi paesi non filtrati e nessuna selezione specifica → browser freeze
-        n_countries_in_data = filtered[cc].nunique()
-        if not countries and not cmp_countries and n_countries_in_data > 30:
-            return dbc.Alert(
-                [html.Strong("Seleziona almeno un paese "),
-                 html.Span("nei filtri globali o nel campo «Paesi da confrontare» "
-                           f"({n_countries_in_data} paesi disponibili).")],
-                color="info",
-            )
+        # Paesi da usare: selezione specifica o auto-limit ai top MAX_CHART_COUNTRIES
+        if cmp_countries:
+            cmp_cc = cmp_countries
+            cmp_auto_note = None
+        elif countries:
+            cmp_cc = countries
+            cmp_auto_note = None
+        else:
+            all_cmp = filtered[cc].dropna().unique().tolist()
+            if len(all_cmp) > _MAX_CHART_COUNTRIES:
+                tmp = filtered[["value" if "value" in filtered.columns
+                                 else filtered.columns[-1], cc]].copy()
+                tmp.columns = ["v", cc]
+                cmp_cc = (tmp.groupby(cc)["v"].count()
+                          .nlargest(_MAX_CHART_COUNTRIES).index.tolist())
+                cmp_auto_note = dbc.Alert(
+                    [html.Span(f"💡 Nessun paese selezionato — confronto limitato ai "
+                               f"{_MAX_CHART_COUNTRIES} paesi con più dati. "),
+                     html.Span("Usa i filtri per scegliere paesi specifici.",
+                               className="text-muted")],
+                    color="info", className="py-2 small mb-2",
+                )
+            else:
+                cmp_cc = all_cmp
+                cmp_auto_note = None
 
-        # Paesi da usare: selezione specifica o tutti i filtrati
-        cmp_cc = cmp_countries if cmp_countries else filtered[cc].dropna().unique().tolist()
         sub_base = filtered[filtered[cc].isin(cmp_cc)]
         if sub_base.empty:
             return dbc.Alert("Nessun dato per i paesi selezionati.", color="warning")
@@ -1191,6 +1221,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
             return s.sort_values("value", ascending=False).head(40)
 
         graphs = []
+        if cmp_auto_note:
+            graphs.append(cmp_auto_note)
 
         def _mlabel(m):
             return OWID_LABELS.get(m, m) if fmt == "wide" else str(m)
