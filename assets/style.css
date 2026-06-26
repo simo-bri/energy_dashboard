@@ -481,13 +481,6 @@ body {
     to   { opacity: 1; transform: translateY(0); }
 }
 
-.js-plotly-plot {
-    animation: fadeInUp 0.35s ease-out forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .js-plotly-plot { animation: none; }
-}
 
 .dash-spreadsheet-container {
     animation: fadeInUp 0.35s ease-out both;
