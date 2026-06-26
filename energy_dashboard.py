@@ -1122,8 +1122,15 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
         try:
             auto_note = None
             if fmt == "wide":
+                # Fallback: se metric è None o non esiste nelle colonne, usa la prima disponibile
+                if not metric or metric not in filtered.columns:
+                    num_cols = [c for c in filtered.select_dtypes(include="number").columns
+                                if c != yc]
+                    priority_cols = [c for c in OWID_PRIORITY if c in num_cols]
+                    metric = (priority_cols[0] if priority_cols
+                              else (num_cols[0] if num_cols else None))
                 if not metric:
-                    return dbc.Alert("Seleziona una metrica dalla sidebar.", color="info")
+                    return dbc.Alert("Nessuna metrica numerica disponibile nei dati.", color="warning")
                 sub = filtered[[cc, yc, metric]].dropna()
                 if not countries:
                     sub, auto_note = _auto_limit_countries(sub, cc)
@@ -1176,6 +1183,23 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
             return dbc.Alert("Seleziona almeno la metrica principale nella sidebar.",
                              color="info")
 
+        # Convalida che cmp_metric_a sia compatibile con la fonte corrente
+        if fmt == "wide":
+            num_cols_cmp = [c for c in filtered.select_dtypes(include="number").columns
+                            if c != yc]
+            if cmp_metric_a not in num_cols_cmp:
+                priority_cols_cmp = [c for c in OWID_PRIORITY if c in num_cols_cmp]
+                cmp_metric_a = (priority_cols_cmp[0] if priority_cols_cmp
+                                else (num_cols_cmp[0] if num_cols_cmp else None))
+            if not cmp_metric_a:
+                return dbc.Alert("Nessuna metrica disponibile per il confronto.", color="warning")
+        elif ic and ic in filtered.columns:
+            avail_inds = set(filtered[ic].dropna().unique())
+            if cmp_metric_a not in avail_inds:
+                cmp_metric_a = next(iter(avail_inds), None)
+            if not cmp_metric_a:
+                return dbc.Alert("Nessun indicatore disponibile per il confronto.", color="warning")
+
         # Paesi da usare: selezione specifica o auto-limit ai top MAX_CHART_COUNTRIES
         if cmp_countries:
             cmp_cc = cmp_countries
@@ -1186,10 +1210,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
         else:
             all_cmp = filtered[cc].dropna().unique().tolist()
             if len(all_cmp) > _MAX_CHART_COUNTRIES:
-                tmp = filtered[["value" if "value" in filtered.columns
-                                 else filtered.columns[-1], cc]].copy()
-                tmp.columns = ["v", cc]
-                cmp_cc = (tmp.groupby(cc)["v"].count()
+                cmp_cc = (filtered[cc].value_counts()
                           .nlargest(_MAX_CHART_COUNTRIES).index.tolist())
                 cmp_auto_note = dbc.Alert(
                     [html.Span(f"💡 Nessun paese selezionato — confronto limitato ai "
@@ -1212,6 +1233,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
         def _get_series(df_in, metric):
             """Estrae (country, year, value) per una metrica, sia wide che long."""
             if fmt == "wide":
+                if metric not in df_in.columns:
+                    return pd.DataFrame(columns=[cc, yc, "value"])
                 return df_in[[cc, yc, metric]].dropna().rename(columns={metric: "value"})
             elif is_ei:
                 # Per EI: metric = nome foglio; carica dinamicamente se diverso da quello corrente
