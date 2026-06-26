@@ -1,0 +1,13 @@
+# Cache dati (si rigenera automaticamente)
+.dashboard_cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# Cache WDI locale
+wdi_cache/
