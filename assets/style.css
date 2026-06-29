@@ -455,8 +455,9 @@ body {
 }
 
 /* ── Plotly charts inside tab ─────────────────────────────── */
-.tab-content-area .js-plotly-plot .plotly .main-svg {
+.tab-content-area .dash-graph {
     border-radius: 10px;
+    overflow: hidden;
 }
 
 /* modebar (plotly toolbar) */
