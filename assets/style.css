@@ -569,7 +569,12 @@ body {
     }
 }
 
-/* Charts più alti su schermi grandi (xl) — blocco separato */
+/* Charts: altezza esplicita su schermi ≥1400px (fullscreen Mac) */
+@media (min-width: 1400px) {
+    .tab-content-area .dash-graph {
+        min-height: 600px;
+    }
+}
 
 /* ═══════════════════════════════════════════════════════════
    Backdrop sidebar (visibile su mobile quando il drawer è aperto)
