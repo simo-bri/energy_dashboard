@@ -570,17 +570,6 @@ body {
 }
 
 /* Charts più alti su schermi grandi (xl) — blocco separato */
-@media (min-width: 1400px) {
-    .tab-content-area .dash-graph {
-        height: 680px !important;
-        min-height: 680px !important;
-    }
-    .tab-content-area .dash-graph > div,
-    .tab-content-area .dash-graph .js-plotly-plot,
-    .tab-content-area .dash-graph .plot-container {
-        height: 680px !important;
-    }
-}
 
 /* ═══════════════════════════════════════════════════════════
    Backdrop sidebar (visibile su mobile quando il drawer è aperto)
