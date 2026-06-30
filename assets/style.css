@@ -455,10 +455,6 @@ body {
 }
 
 /* ── Plotly charts inside tab ─────────────────────────────── */
-.tab-content-area .dash-graph {
-    border-radius: 10px;
-    overflow: hidden;
-}
 
 /* modebar (plotly toolbar) */
 .modebar {
