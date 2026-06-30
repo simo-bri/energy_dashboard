@@ -1165,8 +1165,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                 fig.update_layout(yaxis_title=unit_label)
 
             fig.update_layout(hovermode="x unified", legend_title_text="Paese",
-                              margin={"t": 40})
-            graph = dcc.Graph(figure=fig, style={"height": "600px"})
+                              margin={"t": 40}, height=600)
+            graph = dcc.Graph(figure=fig, style={"height": "600px"}, responsive=False)
             extras = [x for x in [auto_note, warn] if x]
             return html.Div(extras + [graph]) if extras else graph
 
@@ -1307,8 +1307,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                 fig = px.line(data_frame=s, x=yc, y="value", color=cc,
                               title=lbl,
                               labels={yc: "Anno", "value": y_lbl, cc: "Paese"})
-                fig.update_layout(hovermode="x unified", margin={"t": 40})
-                graphs.append(dcc.Graph(figure=fig, style={"height": "580px"}))
+                fig.update_layout(hovermode="x unified", margin={"t": 40}, height=580)
+                graphs.append(dcc.Graph(figure=fig, style={"height": "580px"}, responsive=False))
 
         # ── Snapshot anno ──────────────────────────────────────────────────
         elif cmp_mode == "snapshot":
@@ -1325,8 +1325,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                     fig = px.bar(data_frame=s, x=cc, y="value", color=cc,
                                  title=f"{lbl0}  –  {year}",
                                  labels={"value": y_label, cc: "Paese"})
-                    fig.update_layout(showlegend=False, margin={"t": 40})
-                    graphs.append(dcc.Graph(figure=fig, style={"height": "580px"}))
+                    fig.update_layout(showlegend=False, margin={"t": 40}, height=580)
+                    graphs.append(dcc.Graph(figure=fig, style={"height": "580px"}, responsive=False))
             else:
                 frames = []
                 for m in metrics_plot:
@@ -1341,8 +1341,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                                  title=f"Confronto metriche  –  {year}",
                                  labels={"value": ei_unit or "Valore", cc: "Paese",
                                          "metrica": "Metrica"})
-                    fig.update_layout(margin={"t": 40})
-                    graphs.append(dcc.Graph(figure=fig, style={"height": "540px"}))
+                    fig.update_layout(margin={"t": 40}, height=540)
+                    graphs.append(dcc.Graph(figure=fig, style={"height": "540px"}, responsive=False))
 
         # ── Scatter X vs Y ─────────────────────────────────────────────────
         elif cmp_mode == "scatter":
@@ -1364,8 +1364,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                              labels={"x": _mlabel(cmp_metric_a), "y": _mlabel(cmp_metric_b),
                                      cc: "Paese"})
             fig.update_traces(textposition="top center", marker_size=10)
-            fig.update_layout(margin={"t": 40})
-            graphs.append(dcc.Graph(figure=fig, style={"height": "580px"}))
+            fig.update_layout(margin={"t": 40}, height=580)
+            graphs.append(dcc.Graph(figure=fig, style={"height": "580px"}, responsive=False))
 
         # ── Radar multi-metrica ────────────────────────────────────────────
         elif cmp_mode == "radar":
@@ -1420,7 +1420,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                 margin={"t": 60},
                 height=520,
             )
-            graphs.append(dcc.Graph(figure=fig))
+            graphs.append(dcc.Graph(figure=fig, responsive=False))
 
         return html.Div(graphs) if graphs else dbc.Alert(
             "Nessun dato disponibile con i parametri selezionati.", color="warning")
@@ -1487,7 +1487,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
         )
         fig_bar.update_layout(showlegend=False, margin={"t": 50},
                               coloraxis_showscale=False,
-                              yaxis={"autorange": "reversed"})
+                              yaxis={"autorange": "reversed"}, height=bar_h)
 
         # ── 4. Evoluzione temporale (media aggregata dei paesi filtrati) ───────
         trend = serie.groupby(yc)["value"].agg(["mean", "min", "max"]).reset_index()
@@ -1500,7 +1500,7 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
         fig_trend.add_scatter(x=trend[yc], y=trend["min"], mode="lines",
                               line={"dash": "dot", "color": "salmon"},
                               name="Min", showlegend=True)
-        fig_trend.update_layout(hovermode="x unified", margin={"t": 50})
+        fig_trend.update_layout(hovermode="x unified", margin={"t": 50}, height=460)
 
         return html.Div([
             html.H5(f"Ranking paesi — {m_label}", className="mb-2"),
@@ -1523,8 +1523,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                 ],
             ),
             dbc.Row([
-                dbc.Col(dcc.Graph(figure=fig_bar,  style={"height": f"{bar_h}px"}), width=6),
-                dbc.Col(dcc.Graph(figure=fig_trend, style={"height": "460px"}), width=6),
+                dbc.Col(dcc.Graph(figure=fig_bar,  style={"height": f"{bar_h}px"}, responsive=False), width=6),
+                dbc.Col(dcc.Graph(figure=fig_trend, style={"height": "460px"}, responsive=False), width=6),
             ], className="mt-4 g-3"),
         ])
 
