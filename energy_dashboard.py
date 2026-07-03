@@ -536,8 +536,10 @@ sidebar = dbc.Col(
                 options=[
                     {"label": " Serie temporale", "value": "temporal"},
                     {"label": " Snapshot anno",   "value": "snapshot"},
+                    {"label": " Grafico a torta", "value": "pie"},
                     {"label": " Scatter (X vs Y)", "value": "scatter"},
                     {"label": " Radar multi-metrica", "value": "radar"},
+                    {"label": " Tabella dati",     "value": "table"},
                 ],
                 value="temporal",
                 className="mb-2",
@@ -568,11 +570,25 @@ sidebar = dbc.Col(
                              placeholder="Aggiungi metriche…", className="mb-2"),
             ]),
 
-            # Anno (Snapshot, Scatter, Radar)
+            # Anno (Snapshot, Torta, Scatter, Radar)
             html.Div(id="cmp-year-wrap", style={"display": "none"}, children=[
                 html.Label("Anno di riferimento", className="small"),
                 dcc.Dropdown(id="cmp-year", placeholder="Seleziona anno…",
                              className="mb-2", clearable=False),
+            ]),
+
+            # Periodicità (solo Tabella dati)
+            html.Div(id="cmp-period-wrap", style={"display": "none"}, children=[
+                html.Label("Periodicità", className="small"),
+                dcc.Dropdown(
+                    id="cmp-period",
+                    options=[
+                        {"label": "Annuale",                    "value": 1},
+                        {"label": "Biennale (ogni 2 anni)",     "value": 2},
+                        {"label": "Quinquennale (ogni 5 anni)", "value": 5},
+                    ],
+                    value=1, clearable=False, className="mb-2",
+                ),
             ]),
         ]),
 
@@ -1024,14 +1040,16 @@ def toggle_sidebar_panels(tab):
     Output("cmp-metric-b-wrap",      "style"),
     Output("cmp-metrics-extra-wrap", "style"),
     Output("cmp-year-wrap",          "style"),
+    Output("cmp-period-wrap",        "style"),
     Input("cmp-mode", "value"),
 )
 def toggle_compare_controls(mode):
     show, hide = {"display": "block"}, {"display": "none"}
     return (
-        show if mode == "scatter"                            else hide,  # metrica Y
-        show if mode in ("temporal", "snapshot", "radar")   else hide,  # metriche extra
-        show if mode in ("snapshot", "scatter", "radar")    else hide,  # anno
+        show if mode == "scatter"                                   else hide,  # metrica Y
+        show if mode in ("temporal", "snapshot", "pie", "radar", "table") else hide,  # metriche extra
+        show if mode in ("snapshot", "pie", "scatter", "radar")     else hide,  # anno
+        show if mode == "table"                                     else hide,  # periodicità
     )
 
 
@@ -1050,13 +1068,14 @@ def toggle_compare_controls(mode):
     Input("cmp-metric-b",       "value"),
     Input("cmp-metrics-extra",  "value"),
     Input("cmp-year",           "value"),
+    Input("cmp-period",         "value"),
     Input("stats-metric",       "value"),
     Input("store-key",          "data"),
     State("store-meta", "data"),
 )
 def render_tab(tab, countries, years, metric, indicator, chart_type,
                cmp_mode, cmp_countries, cmp_metric_a, cmp_metric_b,
-               cmp_metrics_extra, cmp_year, stats_metric, key, meta):
+               cmp_metrics_extra, cmp_year, cmp_period, stats_metric, key, meta):
     if not key or not meta or key not in _CACHE:
         return html.Div([
             html.Div(
@@ -1257,6 +1276,14 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
             s = s[s[yc] == year][[cc, "value"]].dropna()
             return s.sort_values("value", ascending=False).head(40)
 
+        def _period_years(years_series, period):
+            """Anni selezionati a partire dal primo disponibile, ogni `period` anni."""
+            years_sorted = sorted(years_series.dropna().unique())
+            if not years_sorted or period <= 1:
+                return years_sorted
+            base = years_sorted[0]
+            return [y for y in years_sorted if (y - base) % period == 0]
+
         graphs = []
         if cmp_auto_note:
             graphs.append(cmp_auto_note)
@@ -1344,6 +1371,69 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                     fig.update_layout(margin={"t": 40}, height=540)
                     graphs.append(dcc.Graph(figure=fig, style={"height": "540px"}))
 
+        # ── Grafico a torta ───────────────────────────────────────────────
+        elif cmp_mode == "pie":
+            ei_unit = _EI_UNITS.get(key, "Valore") if meta.get("type") == "ei" else None
+            year = cmp_year or int(sub_base[yc].max())
+            metrics_plot = [cmp_metric_a] + (cmp_metrics_extra or [])
+
+            if len(metrics_plot) == 1:
+                # Una sola metrica → un'unica torta con i paesi come fette
+                s = _snap(sub_base, cmp_metric_a, year)
+                graphs.extend(_data_warnings(s, cmp_metric_a))
+                lbl0 = _mlabel(cmp_metric_a)
+                y_label = ei_unit if ei_unit else lbl0
+                if not s.empty:
+                    # Raggruppa le voci oltre le prime 11 in "Altri" per leggibilità
+                    if len(s) > 12:
+                        top = s.head(11)
+                        altri_val = s.iloc[11:]["value"].sum()
+                        s_pie = pd.concat(
+                            [top, pd.DataFrame({cc: ["Altri"], "value": [altri_val]})],
+                            ignore_index=True,
+                        )
+                    else:
+                        s_pie = s
+                    fig = px.pie(data_frame=s_pie, names=cc, values="value",
+                                 title=f"{lbl0}  –  {year}",
+                                 labels={"value": y_label, cc: "Paese"})
+                    fig.update_traces(textinfo="label+percent",
+                                      hovertemplate="%{label}: %{value:,.2f}<extra></extra>")
+                    fig.update_layout(margin={"t": 40}, height=560)
+                    graphs.append(dcc.Graph(figure=fig, style={"height": "560px"}))
+            else:
+                # Metriche multiple → una torta per paese con la composizione delle metriche
+                def _country_metric_value(metric, country):
+                    s = _get_series(sub_base, metric)
+                    s = s[(s[cc] == country) & (s[yc] == year)]
+                    return float(s["value"].iloc[0]) if not s.empty else None
+
+                col_width = 12 if len(cmp_cc) == 1 else 6
+                pie_cols = []
+                for country in cmp_cc[:6]:
+                    rows = [{"metrica": _mlabel(m), "value": v}
+                            for m in metrics_plot
+                            if (v := _country_metric_value(m, country)) is not None]
+                    if not rows:
+                        pie_cols.append(dbc.Col(dbc.Alert(
+                            [html.Strong(f"{country}: "),
+                             "nessun dato per le metriche selezionate."],
+                            color="warning", className="py-2 small"), width=col_width))
+                        continue
+                    dfc = pd.DataFrame(rows)
+                    fig = px.pie(data_frame=dfc, names="metrica", values="value",
+                                 title=f"{country}  –  {year}")
+                    fig.update_traces(textinfo="label+percent",
+                                      hovertemplate="%{label}: %{value:,.2f}<extra></extra>")
+                    fig.update_layout(margin={"t": 40}, height=460)
+                    pie_cols.append(dbc.Col(
+                        dcc.Graph(figure=fig, style={"height": "460px"}), width=col_width))
+                if len(cmp_cc) > 6:
+                    graphs.append(dbc.Alert(
+                        f"Mostrati i primi 6 paesi su {len(cmp_cc)} selezionati.",
+                        color="info", className="py-2 small"))
+                graphs.append(dbc.Row(pie_cols, className="g-3"))
+
         # ── Scatter X vs Y ─────────────────────────────────────────────────
         elif cmp_mode == "scatter":
             if not cmp_metric_b:
@@ -1421,6 +1511,71 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                 height=520,
             )
             graphs.append(dcc.Graph(figure=fig))
+
+        # ── Tabella dati (periodicità) ──────────────────────────────────────
+        elif cmp_mode == "table":
+            period = int(cmp_period or 1)
+            years_sel = _period_years(sub_base[yc], period)
+            if not years_sel:
+                return dbc.Alert("Nessun anno disponibile con i filtri selezionati.",
+                                 color="warning")
+            metrics_plot = [cmp_metric_a] + (cmp_metrics_extra or [])
+            period_label = {1: "annuale", 2: "biennale", 5: "quinquennale"}.get(period, "")
+            multi_country = len(cmp_cc) > 1
+
+            combined = pd.DataFrame(index=years_sel)
+            missing_notes = []
+            for m in metrics_plot:
+                s = _get_series(sub_base, m)
+                s = s[s[yc].isin(years_sel)]
+                if s.empty:
+                    missing_notes.append(_mlabel(m))
+                    continue
+                lbl = _mlabel(m)
+                for country in cmp_cc:
+                    sc = s[s[cc] == country][[yc, "value"]].dropna()
+                    if sc.empty:
+                        continue
+                    col_name = f"{country} — {lbl}" if multi_country else lbl
+                    combined[col_name] = sc.set_index(yc)["value"]
+
+            if missing_notes:
+                graphs.append(dbc.Alert(
+                    [html.Strong("Nessun dato per: "), ", ".join(missing_notes)],
+                    color="warning", className="py-2 small", dismissable=True))
+
+            if combined.empty or combined.dropna(how="all").empty:
+                graphs.append(dbc.Alert("Nessun dato disponibile con i parametri selezionati.",
+                                        color="warning"))
+                return html.Div(graphs)
+
+            combined = (combined.round(2).reset_index()
+                        .rename(columns={"index": "Anno"}))
+            graphs.append(html.H6(f"Tabella dati — vista {period_label}",
+                                  className="mt-3 mb-2 fw-semibold"))
+            n_cols = len(combined.columns)
+            graphs.append(html.Div(className="mb-4", children=[
+                dash_table.DataTable(
+                    data=combined.to_dict("records"),
+                    columns=[{"name": c, "id": c} for c in combined.columns],
+                    style_table={"overflowX": "auto", "width": "100%",
+                                 "tableLayout": "fixed" if n_cols > 3 else "auto"},
+                    style_cell={"textAlign": "center", "padding": "6px",
+                                "fontSize": "0.78rem",
+                                "minWidth": "80px", "maxWidth": "180px",
+                                "whiteSpace": "normal", "overflow": "hidden",
+                                "textOverflow": "ellipsis"},
+                    style_header={"fontWeight": "bold", "backgroundColor": "#f8fafc",
+                                 "whiteSpace": "normal", "height": "auto",
+                                 "lineHeight": "1.2"},
+                    style_cell_conditional=[
+                        {"if": {"column_id": "Anno"}, "minWidth": "70px",
+                         "maxWidth": "70px", "fontWeight": "bold"},
+                    ],
+                    page_size=15,
+                    export_format="csv",
+                ),
+            ]))
 
         return html.Div(graphs) if graphs else dbc.Alert(
             "Nessun dato disponibile con i parametri selezionati.", color="warning")
