@@ -511,11 +511,11 @@ sidebar = dbc.Col(
             # Metrica (solo OWID — nascosta per EI e WDI che hanno chart-indicator)
             html.Div(id="chart-metric-wrap", children=[
                 html.Label("Metrica", className="small"),
-                dcc.Dropdown(id="chart-metric", className="mb-2", clearable=False),
+                dcc.Dropdown(id="chart-metric", className="mb-2", clearable=False, multi=True),
             ]),
             html.Div(id="chart-indicator-wrap", style={"display": "none"}, children=[
                 html.Label("Indicatore", className="small"),
-                dcc.Dropdown(id="chart-indicator", className="mb-2", clearable=False),
+                dcc.Dropdown(id="chart-indicator", className="mb-2", clearable=False, multi=True),
             ]),
             html.Label("Tipo grafico", className="small"),
             dcc.Dropdown(
@@ -919,7 +919,7 @@ def load_data(n_clicks, ei_sheet, source, ei_contents, wdi_codes):
 )
 def update_controls(key, meta, current_countries):
     none14 = ([], [], 1960, 2026, [2000, 2026],
-              [], None, [], None, {"display": "none"},
+              [], [], [], [], {"display": "none"},
               [], [], [], None, [], None, [], [], [], None, {"display": "none"},
               [], None, html.Div(), {"display": "block"})
     if not key or not meta or key not in _CACHE:
@@ -1014,8 +1014,11 @@ def update_controls(key, meta, current_countries):
     stats_opts = ind_opts if (ic and ind_opts) else m_opts
     stats_val  = ind_val  if (ic and ind_opts) else m_val
 
+    m_val_list   = [m_val]   if m_val   is not None else []
+    ind_val_list = [ind_val] if ind_val is not None else []
+
     return (country_opts, preserved_countries, y_min, y_max, yr_val,
-            m_opts, m_val, ind_opts, ind_val, ind_style,
+            m_opts, m_val_list, ind_opts, ind_val_list, ind_style,
             country_opts, [], m_opts, cmp_m_val, m_opts, cmp_m_b,
             m_opts, [], year_opts, y_max, metric_wrap_style,
             stats_opts, stats_val, banner, chart_metric_wrap_style)
@@ -1140,50 +1143,98 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
     if tab == "tab-chart":
         try:
             auto_note = None
+            single_country = len(countries or []) == 1
+            legend_title = "Paese"
+
             if fmt == "wide":
-                # Fallback: se metric è None o non esiste nelle colonne, usa la prima disponibile
-                if not metric or metric not in filtered.columns:
+                metrics_sel = metric if isinstance(metric, list) else ([metric] if metric else [])
+                valid_metrics = [m for m in metrics_sel if m in filtered.columns]
+                # Fallback: se nessuna metrica valida, usa la prima disponibile
+                if not valid_metrics:
                     num_cols = [c for c in filtered.select_dtypes(include="number").columns
                                 if c != yc]
                     priority_cols = [c for c in OWID_PRIORITY if c in num_cols]
-                    metric = (priority_cols[0] if priority_cols
-                              else (num_cols[0] if num_cols else None))
-                if not metric:
+                    fallback = (priority_cols[0] if priority_cols
+                                else (num_cols[0] if num_cols else None))
+                    valid_metrics = [fallback] if fallback else []
+                if not valid_metrics:
                     return dbc.Alert("Nessuna metrica numerica disponibile nei dati.", color="warning")
-                sub = filtered[[cc, yc, metric]].dropna()
-                if not countries:
-                    sub, auto_note = _auto_limit_countries(sub, cc)
-                metric_label = OWID_LABELS.get(metric, metric)
-                warn = _no_data_alert(sub, countries, cc)
-                if sub.empty:
-                    return dbc.Alert("Nessun dato per la metrica selezionata con i filtri correnti.",
-                                     color="warning")
-                fig = _make_fig(sub, yc, metric, cc, chart_type or "Line", metric_label)
-                fig.update_layout(yaxis_title=metric_label)
-            else:
-                # Per WDI/EI: determina l'indicatore da usare
-                target_ind = indicator if (ic and indicator) else None
-                # Fallback: se l'indicatore non è ancora impostato, prendi il primo disponibile
-                if target_ind is None and ic and ic in filtered.columns:
-                    avail = sorted(filtered[ic].dropna().unique())
-                    target_ind = avail[0] if avail else None
 
-                if target_ind and ic and ic in filtered.columns:
-                    sub = filtered[filtered[ic] == target_ind]
+                if single_country and len(valid_metrics) > 1:
+                    # Un solo paese + più metriche: tutte sullo stesso grafico (color=metrica)
+                    frames = []
+                    for m in valid_metrics:
+                        sub_m = (filtered[[cc, yc, m]].dropna()
+                                 .rename(columns={m: "value"}))
+                        sub_m["metrica"] = OWID_LABELS.get(m, m)
+                        frames.append(sub_m)
+                    sub = pd.concat(frames, ignore_index=True)
+                    warn = _no_data_alert(sub, countries, cc)
+                    if sub.empty:
+                        return dbc.Alert("Nessun dato per le metriche selezionate con i filtri correnti.",
+                                         color="warning")
+                    fig = _make_fig(sub, yc, "value", "metrica", chart_type or "Line",
+                                    f"{countries[0]} — Confronto metriche")
+                    fig.update_layout(yaxis_title="Valore")
+                    legend_title = "Metrica"
                 else:
-                    sub = filtered
-                sub = sub.dropna(subset=["value"])
-                if not countries:
-                    sub, auto_note = _auto_limit_countries(sub, cc)
-                warn = _no_data_alert(sub, countries, cc)
-                if sub.empty:
-                    return dbc.Alert("Nessun dato per l'indicatore selezionato.", color="warning")
-                title = target_ind or (meta.get("sheet") or "value")
-                unit_label = _EI_UNITS.get(key, "Valore") if meta.get("type") == "ei" else "Valore"
-                fig = _make_fig(sub, yc, "value", cc, chart_type or "Line", title)
-                fig.update_layout(yaxis_title=unit_label)
+                    metric = valid_metrics[0]
+                    sub = filtered[[cc, yc, metric]].dropna()
+                    if not countries:
+                        sub, auto_note = _auto_limit_countries(sub, cc)
+                    metric_label = OWID_LABELS.get(metric, metric)
+                    warn = _no_data_alert(sub, countries, cc)
+                    if sub.empty:
+                        return dbc.Alert("Nessun dato per la metrica selezionata con i filtri correnti.",
+                                         color="warning")
+                    fig = _make_fig(sub, yc, metric, cc, chart_type or "Line", metric_label)
+                    fig.update_layout(yaxis_title=metric_label)
+            else:
+                # Per WDI/EI: determina gli indicatori da usare
+                inds_sel = indicator if isinstance(indicator, list) else ([indicator] if indicator else [])
+                if ic and ic in filtered.columns:
+                    avail_inds = set(filtered[ic].dropna().unique())
+                    valid_inds = [i for i in inds_sel if i in avail_inds]
+                    if not valid_inds:
+                        avail = sorted(avail_inds)
+                        valid_inds = [avail[0]] if avail else []
+                else:
+                    valid_inds = []
 
-            fig.update_layout(hovermode="x unified", legend_title_text="Paese",
+                if single_country and len(valid_inds) > 1:
+                    # Un solo paese + più indicatori: tutti sullo stesso grafico (color=indicatore)
+                    frames = []
+                    for ind in valid_inds:
+                        sub_i = (filtered[filtered[ic] == ind]
+                                 .dropna(subset=["value"]).assign(metrica=str(ind)))
+                        frames.append(sub_i)
+                    sub = pd.concat(frames, ignore_index=True)
+                    warn = _no_data_alert(sub, countries, cc)
+                    if sub.empty:
+                        return dbc.Alert("Nessun dato per gli indicatori selezionati.", color="warning")
+                    unit_label = _EI_UNITS.get(key, "Valore") if meta.get("type") == "ei" else "Valore"
+                    fig = _make_fig(sub, yc, "value", "metrica", chart_type or "Line",
+                                    f"{countries[0]} — Confronto indicatori")
+                    fig.update_layout(yaxis_title=unit_label)
+                    legend_title = "Indicatore"
+                else:
+                    target_ind = valid_inds[0] if valid_inds else None
+                    if target_ind and ic and ic in filtered.columns:
+                        sub = filtered[filtered[ic] == target_ind]
+                    else:
+                        sub = filtered
+                    sub = sub.dropna(subset=["value"])
+                    if not countries:
+                        sub, auto_note = _auto_limit_countries(sub, cc)
+                    warn = _no_data_alert(sub, countries, cc)
+                    if sub.empty:
+                        return dbc.Alert("Nessun dato per l'indicatore selezionato.", color="warning")
+                    title = target_ind or (meta.get("sheet") or "value")
+                    unit_label = _EI_UNITS.get(key, "Valore") if meta.get("type") == "ei" else "Valore"
+                    fig = _make_fig(sub, yc, "value", cc, chart_type or "Line", title)
+                    fig.update_layout(yaxis_title=unit_label)
+
+            fig.update_layout(hovermode="x unified", legend_title_text=legend_title,
                               margin={"t": 40}, height=600)
             graph = dcc.Graph(figure=fig, style={"height": "600px"})
             extras = [x for x in [auto_note, warn] if x]
