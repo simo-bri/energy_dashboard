@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore")
 DATA_SOURCES = {
     "OWID – Global Energy Data": {
         "type": "owid",
-        "url": "https://nyc3.digitaloceanspaces.com/owid-public/data/energy/owid-energy-data.xlsx",
+        "url": "https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv",
     },
     "Energy Institute – Stats Review": {
         "type": "ei",
@@ -150,7 +150,7 @@ def load_owid(url: str) -> pd.DataFrame:
         return _CACHE["owid"]
     if (cached := _disk_load("owid")) is not None:
         return cached
-    df = pd.read_excel(io.BytesIO(_fetch(url)), engine="openpyxl")
+    df = pd.read_csv(io.BytesIO(_fetch(url)))
     df.columns = df.columns.str.strip()
     _CACHE["owid"] = df
     _disk_save("owid", df)
