@@ -209,16 +209,6 @@ def load_ei(file_bytes: bytes, sheet: str) -> pd.DataFrame:
             header_row = i
             break
 
-    # Estrai l'unità di misura dalle righe prima dell'header (ultima non vuota)
-    unit_label = sheet
-    for i in range(header_row - 1, -1, -1):
-        vals = [str(v).strip() for v in raw.iloc[i]
-                if pd.notna(v) and str(v).strip() not in ("nan", "")]
-        if vals:
-            unit_label = vals[0]
-            break
-    _EI_UNITS[key] = unit_label
-
     df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=sheet,
                        header=header_row, engine="openpyxl")
 
@@ -236,6 +226,13 @@ def load_ei(file_bytes: bytes, sheet: str) -> pd.DataFrame:
         raise ValueError(f"Nessuna colonna anno nel foglio '{sheet}'")
 
     country_col = df.columns[0]
+    # L'intestazione della colonna paese contiene l'unità di misura
+    # (es. "Exajoules", "Terawatt-hours", "Megawatts")
+    unit_label = (country_col if country_col
+                  and not country_col.lower().startswith(("unnamed", "country"))
+                  else sheet)
+    _EI_UNITS[key] = unit_label
+
     df = df[[country_col] + year_cols].dropna(subset=[country_col])
     df = df[~df[country_col].astype(str).str.startswith(("Total", "of which", "Memo"))]
 
