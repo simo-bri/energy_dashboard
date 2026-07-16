@@ -315,8 +315,10 @@ def _apply_filters(df: pd.DataFrame, meta: dict,
 
 
 def _make_fig(sub: pd.DataFrame, x: str, y: str, color: str,
-              chart_type: str, title: str = "") -> object:
+              chart_type: str, title: str = "", y_label: str | None = None) -> object:
     kw = dict(data_frame=sub, x=x, y=y, color=color, title=title)
+    if y_label:
+        kw["labels"] = {y: y_label}
     return {
         "Line":    lambda: px.line(**kw),
         "Bar":     lambda: px.bar(**kw, barmode="group"),
@@ -1184,7 +1186,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                     if sub.empty:
                         return dbc.Alert("Nessun dato per la metrica selezionata con i filtri correnti.",
                                          color="warning")
-                    fig = _make_fig(sub, yc, metric, cc, chart_type or "Line", metric_label)
+                    fig = _make_fig(sub, yc, metric, cc, chart_type or "Line", metric_label,
+                                    y_label=metric_label)
                     fig.update_layout(yaxis_title=metric_label)
             else:
                 # Per WDI/EI: determina gli indicatori da usare
@@ -1228,7 +1231,8 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                         return dbc.Alert("Nessun dato per l'indicatore selezionato.", color="warning")
                     title = target_ind or (meta.get("sheet") or "value")
                     unit_label = _EI_UNITS.get(key, "Valore") if meta.get("type") == "ei" else "Valore"
-                    fig = _make_fig(sub, yc, "value", cc, chart_type or "Line", title)
+                    fig = _make_fig(sub, yc, "value", cc, chart_type or "Line", title,
+                                    y_label=unit_label)
                     fig.update_layout(yaxis_title=unit_label)
 
             fig.update_layout(hovermode="x unified", legend_title_text=legend_title,
@@ -1337,7 +1341,13 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
             graphs.append(cmp_auto_note)
 
         def _mlabel(m):
-            return OWID_LABELS.get(m, m) if fmt == "wide" else str(m)
+            if fmt == "wide":
+                return OWID_LABELS.get(m, m)
+            if is_ei:
+                ei_sig = hashlib.md5((_ei_raw_bytes or b"")[:512]).hexdigest()[:8]
+                unit = _EI_UNITS.get(f"ei|{m}|{ei_sig}", "")
+                return f"{m} ({unit})" if unit and unit != m else str(m)
+            return str(m)
 
         def _unavailable(m):
             return dbc.Alert(
@@ -1445,8 +1455,10 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                     fig = px.pie(data_frame=s_pie, names=cc, values="value",
                                  title=f"{lbl0}  –  {year}",
                                  labels={"value": y_label, cc: "Paese"})
+                    unit_suffix = f" {ei_unit}" if ei_unit else ""
                     fig.update_traces(textinfo="label+percent",
-                                      hovertemplate="%{label}: %{value:,.2f}<extra></extra>")
+                                      hovertemplate="%{label}: %{value:,.2f}"
+                                                    + unit_suffix + "<extra></extra>")
                     fig.update_layout(margin={"t": 40}, height=560)
                     graphs.append(dcc.Graph(figure=fig, style={"height": "560px"}))
             else:
@@ -1643,7 +1655,11 @@ def render_tab(tab, countries, years, metric, indicator, chart_type,
                 serie = filtered[filtered[ic] == stats_metric][[cc, yc, "value"]].dropna()
             else:
                 serie = filtered[[cc, yc, "value"]].dropna()
-            m_label = str(stats_metric)
+            if meta.get("type") == "ei":
+                unit = _EI_UNITS.get(key, "")
+                m_label = f"{stats_metric} ({unit})" if unit and unit != stats_metric else str(stats_metric)
+            else:
+                m_label = str(stats_metric)
 
         if serie.empty:
             return dbc.Alert("Nessun dato per la metrica selezionata con i filtri correnti.", color="warning")
